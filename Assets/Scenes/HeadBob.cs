@@ -1,202 +1,172 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
+using static LightManager;
 
 public class HeadBob : MonoBehaviour
 {
     public CharacterController controller;
 
-    [Header("Normal Bob")]
-    public float bobSpeed = 14f;
-    public float bobAmount = 0.05f;
+    [SerializeField] private HeadBobPreset _preset;
 
-    [Header("Subway Jerk")]
-    public float jerkIntervalMin = 2f;
-    public float jerkIntervalMax = 5f;
-    public float jerkAmount = 0.15f;
-    public float jerkReturnSpeed = 8f;
+    public float startDuration = 1f;
+    public float loopDuration = 2f;
+    public float endDuration = 1f;
 
-    private float defaultYPos;
-    private float timer;
+    public float bobHeight = 0.1f;
 
-    // subway state
-    private float jerkTimer;
-    private float jerkValue;
-    private float nextJerkTime;
+    public float xRandomAmount = 0.2f;
+    public float yRandomAmount = 0.05f;
 
-    public enum HeadBobMode
+    public float xNoiseSpeed = 2f;
+    public float yNoiseSpeed = 3f;
+
+    private float _defaultY;
+    private float _defaultX;
+
+    private float _timer;
+
+    private float _xNoiseSeed;
+    private float _yNoiseSeed;
+
+    public enum BobState
     {
-        Normal,
-        Subway
+        Idle,
+        Start,
+        Loop,
+        End
     }
 
-    public HeadBobMode mode = HeadBobMode.Normal;
+    public BobState currentState = BobState.Idle;
 
     void Start()
     {
-        defaultYPos = transform.localPosition.y;
-        SetNextJerkTime();
+        _defaultY = transform.localPosition.y;
+        _defaultX = transform.localPosition.x;
+
+        _xNoiseSeed = Random.Range(0f, 999f);
+        _yNoiseSeed = Random.Range(0f, 999f);
     }
 
     void Update()
     {
-        HandleInput();
-
-        bool isMoving = controller.velocity.magnitude > 0.1f && controller.isGrounded;
-
-        if (!isMoving)
+        switch (currentState)
         {
-            ResetBob();
-            return;
-        }
-
-        switch (mode)
-        {
-            case HeadBobMode.Normal:
-                ApplyNormalBob();
+            case BobState.Start:
+                PlayStart();
                 break;
 
-            case HeadBobMode.Subway:
-                ApplySubwayBob();
+            case BobState.Loop:
+                PlayLoop();
+                break;
+
+            case BobState.End:
+                PlayEnd();
+                break;
+
+            case BobState.Idle:
+                ResetPosition();
                 break;
         }
     }
 
-    // ----------------------------
-    // INPUT CONTROL
-    // ----------------------------
-    void HandleInput()
+    public void StartBob()
     {
-        if (Keyboard.current.digit3Key.wasPressedThisFrame)
+        _timer = 0f;
+        currentState = BobState.Start;
+    }
+
+    public void StopBob()
+    {
+        _timer = 0f;
+        currentState = BobState.End;
+    }
+
+    void PlayStart()
+    {
+        _timer += Time.deltaTime;
+
+        float t = _timer / startDuration;
+
+        float value = _preset.startCurve.Evaluate(t);
+
+        ApplyPosition(value);
+
+        if (t >= 1f || _preset.startCurve.keys[_preset.startCurve.length - 1].time <= t)
         {
-            mode = HeadBobMode.Normal;
-        }
-        else if (Keyboard.current.digit4Key.wasPressedThisFrame)
-        {
-            mode = HeadBobMode.Subway;
-        }
-        else if (Keyboard.current.digit5Key.wasPressedThisFrame)
-        {
-            ResetBob();
+            _timer = 0f;
+            currentState = BobState.Loop;
         }
     }
 
-    // ----------------------------
-    // NORMAL BOB
-    // ----------------------------
-    void ApplyNormalBob()
+    void PlayLoop()
     {
-        timer += Time.deltaTime * bobSpeed;
+        _timer += Time.deltaTime;
 
-        float sinOffset = Mathf.Sin(timer) * bobAmount;
+        float t = (_timer % loopDuration) / loopDuration;
 
+        float value = _preset.loopCurve.Evaluate(t);
+
+        ApplyPosition(value);
+    }
+
+    void PlayEnd()
+    {
+        _timer += Time.deltaTime;
+
+        float t = _timer / endDuration;
+
+        float value = _preset.endCurve.Evaluate(t);
+
+        ApplyPosition(value);
+
+        if (_preset.endCurve.keys[_preset.endCurve.length - 1].time <= t)
+        {
+            _timer = 0f;
+            currentState = BobState.Idle;
+        }
+    }
+
+    void ApplyPosition(float value)
+    {
         Vector3 pos = transform.localPosition;
-        pos.y = defaultYPos + sinOffset;
+
+        float xNoise =
+            Mathf.PerlinNoise(
+                _xNoiseSeed,
+                Time.time * xNoiseSpeed
+            ) * 2f - 1f;
+
+        float yNoise =
+            Mathf.PerlinNoise(
+                _yNoiseSeed,
+                Time.time * yNoiseSpeed
+            ) * 2f - 1f;
+
+        float xOffset =
+            xNoise *
+            Mathf.Abs(value) *
+            xRandomAmount;
+
+        float yOffset =
+            yNoise *
+            yRandomAmount;
+
+        pos.x = _defaultX + xOffset;
+
+        pos.y =
+            _defaultY +
+            (value * bobHeight) +
+            yOffset;
+
         transform.localPosition = pos;
     }
 
-    // ----------------------------
-    // SUBWAY BOB
-    // ----------------------------
-    // ----------------------------
-    // SUBWAY BOB (IMPROVED)
-    // ----------------------------
-    void ApplySubwayBob()
+    void ResetPosition()
     {
-        timer += Time.deltaTime;
-
-        // -----------------------------------
-        // 1. 상태 기반 흔들림 강도 변화
-        // -----------------------------------
-        float stateNoise = Mathf.PerlinNoise(Time.time * 0.2f, 0f);
-
-        float amplitudeMultiplier = 1f;
-        float speedMultiplier = 1f;
-        float jerkMultiplier = 1f;
-
-        if (stateNoise < 0.3f)
-        {
-            // calm section
-            amplitudeMultiplier = 0.6f;
-            speedMultiplier = 0.8f;
-            jerkMultiplier = 0.3f;
-        }
-        else if (stateNoise < 0.7f)
-        {
-            // normal subway vibration
-            amplitudeMultiplier = 1f;
-            speedMultiplier = 1f;
-            jerkMultiplier = 1f;
-        }
-        else
-        {
-            // turbulence (train shake / braking)
-            amplitudeMultiplier = 2.0f;
-            speedMultiplier = 1.3f;
-            jerkMultiplier = 3.0f;
-        }
-
-        // -----------------------------------
-        // 2. 기본 진동 (상태 반영된 sin)
-        // -----------------------------------
-        float wave = Mathf.Sin(timer * bobSpeed * speedMultiplier)
-                     * bobAmount * amplitudeMultiplier;
-
-        // -----------------------------------
-        // 3. 충격성 덜컹 (비정기 + 가중)
-        // -----------------------------------
-        jerkTimer += Time.deltaTime;
-
-        float dynamicInterval = Mathf.Lerp(
-            jerkIntervalMax,
-            jerkIntervalMin,
-            stateNoise
-        );
-
-        if (jerkTimer >= dynamicInterval)
-        {
-            jerkTimer = 0f;
-
-            // "툭"이 아니라 "쿵" 느낌
-            jerkValue += Random.Range(-jerkAmount, jerkAmount) * jerkMultiplier;
-        }
-
-        // -----------------------------------
-        // 4. 빠른 감쇠 (지하철 핵심 느낌)
-        // -----------------------------------
-        float decaySpeed = jerkReturnSpeed;
-
-        // turbulence일수록 잔향 길게
-        if (stateNoise > 0.7f)
-            decaySpeed *= 0.6f;
-
-        jerkValue = Mathf.Lerp(jerkValue, 0f, Time.deltaTime * decaySpeed);
-
-        // -----------------------------------
-        // 5. 최종 합성
-        // -----------------------------------
         Vector3 pos = transform.localPosition;
-        pos.y = defaultYPos + wave + jerkValue;
+
+        pos.x = Mathf.Lerp(pos.x, _defaultX, Time.deltaTime * 5f);
+        pos.y = Mathf.Lerp(pos.y, _defaultY, Time.deltaTime * 5f);
+
         transform.localPosition = pos;
-    }
-
-    // ----------------------------
-    // RESET
-    // ----------------------------
-    void ResetBob()
-    {
-        timer = 0f;
-        jerkValue = 0f;
-
-        Vector3 pos = transform.localPosition;
-        pos.y = Mathf.Lerp(pos.y, defaultYPos, Time.deltaTime * 5f);
-        transform.localPosition = pos;
-    }
-
-    // ----------------------------
-    // UTILITY
-    // ----------------------------
-    void SetNextJerkTime()
-    {
-        nextJerkTime = Random.Range(jerkIntervalMin, jerkIntervalMax);
     }
 }
