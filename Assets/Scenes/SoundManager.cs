@@ -1,9 +1,13 @@
+using System;
 using UnityEngine;
 
 public class SoundManager : MonoBehaviour
 {
     [SerializeField] private AudioSource _embientSound;
     [SerializeField] private AudioSource _announcementSound;
+    [SerializeField] private AudioClip _jumpsquareSound;
+
+    [SerializeField] private AudioSource _sfxSource;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -44,5 +48,10 @@ public class SoundManager : MonoBehaviour
         public void NormalAmbient()
         {
             _embientSound.pitch = 1f;
+    }
+
+    internal void PlayJumpsquareSound()
+    {
+        _sfxSource.PlayOneShot(_jumpsquareSound);
     }
 }

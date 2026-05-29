@@ -3,7 +3,6 @@ using UnityEngine.InputSystem;
 
 public class GameLogicManager : MonoBehaviour
 {
-    [SerializeField] private Light[] _areaLigts;
     [SerializeField] private HeadBob _headBob;
 
     private SoundManager _soundManager;
@@ -11,8 +10,10 @@ public class GameLogicManager : MonoBehaviour
     private LightManager _lightManager;
 
     [SerializeField] private float _stateInterval = 10f;
+    [SerializeField] private float _blackoutEventInterval = 5f;
 
-    private float _timer;
+    private float _stateTimer;
+    private float _blackoutEventTimer;
 
     public enum GameState
     {
@@ -29,45 +30,94 @@ public class GameLogicManager : MonoBehaviour
         _eventManager = Object.FindAnyObjectByType<EventManager>();
     }
 
-    void Start()
-    {
-        //SetState(GameState.Normal);
-    }
-
     void Update()
     {
-        _timer += Time.deltaTime;
+        UpdateStateLoop();
 
-        if (_timer >= _stateInterval)
+        UpdateBlackoutEvents();
+
+        HandleInput();
+    }
+
+    void UpdateStateLoop()
+    {
+        _stateTimer += Time.deltaTime;
+
+        if (_stateTimer < _stateInterval)
+            return;
+
+        _stateTimer = 0f;
+
+        ToggleState();
+    }
+
+    void UpdateBlackoutEvents()
+    {
+        if (CurrentState != GameState.Blackout)
+            return;
+
+        _blackoutEventTimer += Time.deltaTime;
+
+        if (_blackoutEventTimer < _blackoutEventInterval)
+            return;
+
+        _blackoutEventTimer = 0f;
+
+        int randInt = UnityEngine.Random.Range(0, 2);  
+
+        if (randInt == 0)
         {
-            _timer = 0f;
-
-            if (CurrentState == GameState.Normal)
-            {
-                SetState(GameState.Blackout);
-            }
-            else
-            {
-                SetState(GameState.Normal);
-            }
+            _eventManager.ActorNeckRotateToPlayer();
+        }
+        else
+        {
+            _eventManager.ActorJumpSquare();
+            _soundManager.PlayJumpsquareSound();
         }
 
+    }
+
+    void HandleInput()
+    {
         if (Keyboard.current.digit1Key.wasPressedThisFrame)
         {
-            _timer = 0f;
+            _stateTimer = 0f;
+
             SetState(GameState.Blackout);
         }
 
         if (Keyboard.current.digit2Key.wasPressedThisFrame)
         {
-            _timer = 0f;
+            _stateTimer = 0f;
+
             SetState(GameState.Normal);
+        }
+
+        if (Keyboard.current.digit3Key.wasPressedThisFrame)
+        {
+            _eventManager.ActorNeckRotateToPlayer();
+        }
+    }
+
+    void ToggleState()
+    {
+        switch (CurrentState)
+        {
+            case GameState.Normal:
+                SetState(GameState.Blackout);
+                break;
+
+            case GameState.Blackout:
+                SetState(GameState.Normal);
+                break;
         }
     }
 
     void SetState(GameState state)
     {
         CurrentState = state;
+
+        _blackoutEventTimer = 0f;
 
         switch (CurrentState)
         {
@@ -97,6 +147,7 @@ public class GameLogicManager : MonoBehaviour
         _lightManager.StartLights();
 
         _soundManager.PlayAnnouncement();
+
         _soundManager.DistortionAmbient();
     }
 }

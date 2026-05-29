@@ -15,8 +15,13 @@ public class EventManager : MonoBehaviour
         
     }
 
-    public void StartActorEvent()
+    public void ActorNeckRotateToPlayer()
     {
-        _actorManager.RotateActorNecToPlayer();
+        _actorManager.ActorNeckRotateToPlayer();
+    }
+
+    public void ActorJumpSquare()
+    {
+        _actorManager.ActorJumpSquare();
     }
 }

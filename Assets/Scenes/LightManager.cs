@@ -1,4 +1,5 @@
 using UnityEngine;
+using static UnityEngine.Rendering.DebugUI;
 
 public class LightManager : MonoBehaviour
 {
@@ -24,14 +25,17 @@ public class LightManager : MonoBehaviour
         switch (CurrentState)
         {
             case LightState.Start:
+
                 PlayStart();
                 break;
 
             case LightState.Loop:
+                ApplyAreaLightColor(CurrentState);
                 PlayLoop();
                 break;
 
             case LightState.End:
+                ApplyAreaLightColor(CurrentState);
                 PlayEnd();
                 break;
         }
@@ -64,7 +68,7 @@ public class LightManager : MonoBehaviour
         float dir =
             _lightPreset.dirStartCurve.Evaluate(_timer);
 
-        ApplyAreaLight(area);
+        ApplyAreaLightIntensity(area);
         ApplyDirectionalLight(dir);
 
         if (_timer >= endTime)
@@ -91,7 +95,7 @@ public class LightManager : MonoBehaviour
         float dir =
             _lightPreset.dirLoopCurve.Evaluate(loopTime);
 
-        ApplyAreaLight(area);
+        ApplyAreaLightIntensity(area);
         ApplyDirectionalLight(dir);
     }
 
@@ -110,7 +114,7 @@ public class LightManager : MonoBehaviour
         float dir =
             _lightPreset.dirEndCurve.Evaluate(_timer);
 
-        ApplyAreaLight(area);
+        ApplyAreaLightIntensity(area);
         ApplyDirectionalLight(dir);
 
         if (_timer >= endTime)
@@ -120,7 +124,23 @@ public class LightManager : MonoBehaviour
         }
     }
 
-    void ApplyAreaLight(float value)
+    void ApplyAreaLightColor(LightState state)
+    {
+        foreach (var light in _areaLigts)
+        {
+            if (state == LightState.End)
+            {
+                light.color = _lightPreset.normalColor;
+            }
+            else if (state == LightState.Loop)
+            {
+                light.color = _lightPreset.directionColor;
+            }
+
+        }
+    }
+
+    void ApplyAreaLightIntensity(float value)
     {
         foreach (var light in _areaLigts)
         {
