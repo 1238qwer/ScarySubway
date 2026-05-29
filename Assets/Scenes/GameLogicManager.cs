@@ -63,16 +63,17 @@ public class GameLogicManager : MonoBehaviour
 
         _blackoutEventTimer = 0f;
 
-        int randInt = UnityEngine.Random.Range(0, 2);  
+        int randInt = UnityEngine.Random.Range(0, 3);  
 
         if (randInt == 0)
         {
-            _eventManager.ActorNeckRotateToPlayer();
+            _eventManager.ActorJumpSquare();
+            _soundManager.PlayJumpsquareSound();
+
         }
         else
         {
-            _eventManager.ActorJumpSquare();
-            _soundManager.PlayJumpsquareSound();
+            _eventManager.ActorNeckRotateToPlayer();
         }
 
     }
