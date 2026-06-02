@@ -45,9 +45,9 @@ public class SoundManager : MonoBehaviour
         _embientSound.pitch = 2f;
     }
 
-        public void NormalAmbient()
-        {
-            _embientSound.pitch = 1f;
+    public void NormalAmbient()
+    {
+        _embientSound.pitch = 1f;
     }
 
     internal void PlayJumpsquareSound()

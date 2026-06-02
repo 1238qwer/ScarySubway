@@ -79,6 +79,20 @@ public class Actor : MonoBehaviour
         }
     }
 
+    public void SetMaterials(Material headMat, Material bodyMat)
+    {
+        Transform capsule = transform.Find("Capsule");
+
+        Renderer headRenderer =
+            capsule.Find("Head").GetComponent<Renderer>();
+
+        Renderer bodyRenderer =
+            capsule.GetComponent<Renderer>();
+
+        headRenderer.material = headMat;
+        bodyRenderer.material = bodyMat;
+    }
+
     public void NeckRotateToPlayer()
     {
         _head.transform.LookAt(

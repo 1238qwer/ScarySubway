@@ -24,6 +24,9 @@ public class LightManager : MonoBehaviour
     {
         switch (CurrentState)
         {
+            case LightState.Idle:
+                ApplyAreaLightIntensity(0.15f);
+                break;
             case LightState.Start:
 
                 PlayStart();
@@ -131,6 +134,7 @@ public class LightManager : MonoBehaviour
             if (state == LightState.End)
             {
                 light.color = _lightPreset.normalColor;
+  
             }
             else if (state == LightState.Loop)
             {
