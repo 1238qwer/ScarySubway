@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: ceffc1634d02d3a4f824ad9871df008b
+guid: d0775619311267c429087f36e199ccac
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
@@ -7,33 +7,8 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: MI_OfficeCeiling
-    second: {fileID: 2100000, guid: a500da9c45c1ba64db8ceb6f0f94d041, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: MI_Subway_Trim
-    second: {fileID: 2100000, guid: 74079d2d8d9204340aa20ba24252022a, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: MI_Tactile_B001
-    second: {fileID: 2100000, guid: f74c31535b2e1f8408d1cedc3b0c8455, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: MI_Tactile_B002
-    second: {fileID: 2100000, guid: 1f7e508029c206e409e7c62bd03150cc, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: MI_TilesGranite_B001
-    second: {fileID: 2100000, guid: c78c8b76e05be0341a1e99034225974a, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: MI_TitleWall
-    second: {fileID: 2100000, guid: 0b20701f78da4bf4dbb0179c34bcf5c4, type: 2}
+      name: Material_1
+    second: {fileID: 2100000, guid: 19dc8de758084cd40b619f89885fb285, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

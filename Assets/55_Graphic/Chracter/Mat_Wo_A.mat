@@ -20,11 +20,12 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: 02_Hatching_CrazyInk_TTS_RefMat 1
+  m_Name: Mat_Wo_A
   m_Shader: {fileID: 4800000, guid: aef19de831fba0648a6eb5c4487ea286, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
+  - _NORMALMAP
   - _SHADING_PBR
   m_InvalidKeywords: []
   m_LightmapFlags: 4
@@ -39,11 +40,11 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _BaseMap:
-        m_Texture: {fileID: 2800000, guid: 6d66af50d936f094d8a91f222b1ac620, type: 3}
+        m_Texture: {fileID: 2800000, guid: 88bccd075cc758649b26e20affabc9ad, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BumpMap:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: a66307f70c2cb9b4ea9be276b72c885e, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _DetailAlbedoMap:
@@ -79,7 +80,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _NoiseMap1:
-        m_Texture: {fileID: 2800000, guid: 0528154608ff38a4c845b6622c088ea0, type: 3}
+        m_Texture: {fileID: 2800000, guid: e34337d7a9805974d849d9bfa0ef1c7d, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _NoiseMap2:
@@ -125,33 +126,33 @@ Material:
     - _CastShadowColorMode: 0
     - _CastShadowsAnchorSSToObjectsOrigin: 1
     - _CastShadowsCoordinateSystem: 1
-    - _CastShadowsDrawSpace: 0
+    - _CastShadowsDrawSpace: 1
     - _CastShadowsHardnessRandomIntensity: 1
     - _CastShadowsHardnessRandomMode: 1
-    - _CastShadowsLengthRandomIntensity: 0.18
+    - _CastShadowsLengthRandomIntensity: 0.806
     - _CastShadowsLengthRandomMode: 2
     - _CastShadowsNoise1Seed: 1
     - _CastShadowsNoise1Size: 10
     - _CastShadowsNoise2Seed: 1
     - _CastShadowsNoiseIntensity: 0
-    - _CastShadowsNumberOfCellsHatching: 4
-    - _CastShadowsOpacityRandomIntensity: 0.226
-    - _CastShadowsOpacityRandomMode: 0
+    - _CastShadowsNumberOfCellsHatching: 15
+    - _CastShadowsOpacityRandomIntensity: 0.048
+    - _CastShadowsOpacityRandomMode: 1
     - _CastShadowsPolarCenterMode: 0
     - _CastShadowsSSCameraDistanceScaled: 0
     - _CastShadowsSmoothness: 0.9
-    - _CastShadowsSpacingRandomIntensity: 1
+    - _CastShadowsSpacingRandomIntensity: 0.608
     - _CastShadowsSpacingRandomMode: 0
     - _CastShadowsStrength: 0
     - _CastShadowsStyle: 0
     - _CastShadowsThicknessRandomMode: 1
-    - _CastShadowsThicknesshRandomIntensity: 1
+    - _CastShadowsThicknesshRandomIntensity: 0
     - _CastShadowsUVSet: 0
     - _CategoryOutline: 0
     - _CategoryStyling: 0
     - _CategorySurfaceOptionsAndInputs: 0
     - _CategoryToonShading: 0
-    - _CellTransitionSmoothness: 0.188
+    - _CellTransitionSmoothness: 0.085
     - _ClearCoatMask: 0
     - _ClearCoatSmoothness: 0
     - _CoordinateSystem: 1
@@ -160,7 +161,7 @@ Material:
     - _Cutoff: 0.5
     - _DetailAlbedoMapScale: 1
     - _DetailNormalMapScale: 1
-    - _DrawSpace: 0
+    - _DrawSpace: 1
     - _DstBlend: 0
     - _EnableAntiAliasing: 0
     - _EnableCastShadows: 1
@@ -193,7 +194,7 @@ Material:
     - _HatchingAffectedByNormalMap: 0
     - _HatchingCameraDistanceFade: 0
     - _IsOptimized: 0
-    - _LengthRandomIntensity: 0.18
+    - _LengthRandomIntensity: 0.806
     - _LengthRandomMode: 2
     - _LightColorContribution: 0
     - _LightFunction: 1
@@ -202,12 +203,12 @@ Material:
     - _Metallic: 0
     - _Mode: 0
     - _NoiseIntensity: 0
-    - _NoiseTextureQuality: 0
-    - _NumberOfCells: 4
-    - _NumberOfCellsHatching: 4
+    - _NoiseTextureQuality: 1
+    - _NumberOfCells: 3
+    - _NumberOfCellsHatching: 15
     - _OcclusionStrength: 1
-    - _OpacityRandomIntensity: 0.226
-    - _OpacityRandomMode: 0
+    - _OpacityRandomIntensity: 0.048
+    - _OpacityRandomMode: 1
     - _OutlineCameraDistanceImpact: 0
     - _OutlineConstantScreenWidth: 0
     - _OutlineDepthOffset: 0
@@ -261,10 +262,10 @@ Material:
     - _ShadingUseLightColors: 1
     - _ShadowMode: 0
     - _ShadowsAffectByNormalMap: 1
-    - _Smoothness: 0.473
+    - _Smoothness: 0
     - _SmoothnessSource: 0
     - _SmoothnessTextureChannel: 0
-    - _SpacingRandomIntensity: 1
+    - _SpacingRandomIntensity: 0.608
     - _SpacingRandomMode: 0
     - _SpecularAffectedByNormalMap: 0
     - _SpecularAnchorSSToObjectsOrigin: 1
@@ -300,7 +301,7 @@ Material:
     - _SrcBlend: 1
     - _StylingAdjustDistanceFadeValue: 0
     - _StylingCastShadowsBlending: 0
-    - _StylingCastShadowsDashesDensity: 114.6
+    - _StylingCastShadowsDashesDensity: 262.9
     - _StylingCastShadowsDashesOffset: 0
     - _StylingCastShadowsDashesRoundness: 1
     - _StylingCastShadowsDashesSize: 0.5
@@ -308,26 +309,26 @@ Material:
     - _StylingCastShadowsDashesTransitionSoftness: 0
     - _StylingCastShadowsDashesType: 0
     - _StylingCastShadowsDashesUseHatchingDensity: 1
-    - _StylingCastShadowsDensity: 114.6
+    - _StylingCastShadowsDensity: 262.9
     - _StylingCastShadowsEnableDashes: 1
     - _StylingCastShadowsHalftonesOffset: 1
     - _StylingCastShadowsHalftonesRoundness: 1
     - _StylingCastShadowsHalftonesRoundnessFalloff: 1
-    - _StylingCastShadowsHardness: 1
-    - _StylingCastShadowsInitialDirection: 257
+    - _StylingCastShadowsHardness: 0.575
+    - _StylingCastShadowsInitialDirection: 60
     - _StylingCastShadowsIsInverted: 0
-    - _StylingCastShadowsOpacity: 0.403
+    - _StylingCastShadowsOpacity: 0.661
     - _StylingCastShadowsOpacityFalloff: 0
-    - _StylingCastShadowsRotationBetweenCells: -134
+    - _StylingCastShadowsRotationBetweenCells: -21
     - _StylingCastShadowsSmoothness: 1
     - _StylingCastShadowsSyncWithOtherStyling: 1
-    - _StylingCastShadowsThickness: 0.22
-    - _StylingCastShadowsThicknessControl: 0
-    - _StylingCastShadowsThicknessFalloff: 0.07
+    - _StylingCastShadowsThickness: 0.059
+    - _StylingCastShadowsThicknessControl: 1
+    - _StylingCastShadowsThicknessFalloff: 0.403
     - _StylingDFFalloff: 0
     - _StylingDFStartingDistance: 0
     - _StylingDistanceFadeValue: 0
-    - _StylingOvermodelingFactor: 0.999
+    - _StylingOvermodelingFactor: 0.696
     - _StylingRimAffectedArea: 1
     - _StylingRimBlending: 0
     - _StylingRimDashesDensity: 30
@@ -356,7 +357,7 @@ Material:
     - _StylingRimThicknessControl: 0
     - _StylingRimThicknessFalloff: 0.1
     - _StylingShadingBlending: 0
-    - _StylingShadingDashesDensity: 114.6
+    - _StylingShadingDashesDensity: 262.9
     - _StylingShadingDashesOffset: 0
     - _StylingShadingDashesRoundness: 1
     - _StylingShadingDashesSize: 0.5
@@ -364,22 +365,22 @@ Material:
     - _StylingShadingDashesTransitionSoftness: 0
     - _StylingShadingDashesType: 0
     - _StylingShadingDashesUseHatchingDensity: 1
-    - _StylingShadingDensity: 114.6
+    - _StylingShadingDensity: 262.9
     - _StylingShadingEnableDashes: 1
     - _StylingShadingHalftonesOffset: 1
     - _StylingShadingHalftonesRoundness: 1
     - _StylingShadingHalftonesRoundnessFalloff: 1
-    - _StylingShadingHardness: 1
-    - _StylingShadingInitialDirection: 257
+    - _StylingShadingHardness: 0.575
+    - _StylingShadingInitialDirection: 60
     - _StylingShadingIsInverted: 0
-    - _StylingShadingOpacity: 0.403
+    - _StylingShadingOpacity: 0.661
     - _StylingShadingOpacityFalloff: 0
     - _StylingShadingPosition: 0
-    - _StylingShadingRotationBetweenCells: -134
+    - _StylingShadingRotationBetweenCells: -21
     - _StylingShadingSyncWithOtherStyling: 0
-    - _StylingShadingThickness: 0.22
-    - _StylingShadingThicknessControl: 0
-    - _StylingShadingThicknessFalloff: 0.07
+    - _StylingShadingThickness: 0.059
+    - _StylingShadingThicknessControl: 1
+    - _StylingShadingThicknessFalloff: 0.403
     - _StylingSpecularBlending: 0
     - _StylingSpecularCutOutShading: 0
     - _StylingSpecularDashesDensity: 30
@@ -419,7 +420,7 @@ Material:
     - _TerminatorWidth: 0.441
     - _TheToonShaderIdentifier: 1
     - _ThicknessRandomMode: 1
-    - _ThicknesshRandomIntensity: 1
+    - _ThicknesshRandomIntensity: 0
     - _UVSec: 0
     - _UVSet: 0
     - _UseAlphaOnlyFromBaseMap: 0
