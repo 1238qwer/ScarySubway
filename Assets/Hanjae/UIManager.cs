@@ -1,35 +1,33 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
 
 public class UIManager : MonoBehaviour
 {
-    [SerializeField] private GameObject[] _eyesIcons;
+    [SerializeField] private GameObject _eyesIconPos;
+    [SerializeField] private Texture _eyeIconTexture;
+    [SerializeField] private Vector2 _eyeIconSize = new Vector2(80f, 80f);
+    [SerializeField] private int _eyeIconCount = 3;
+    [SerializeField] private float _eyeIconSpacing = 150f;
+
     [SerializeField] private Image _fadeImg;
-    [SerializeField] private TMPro.TextMeshProUGUI _fadeText;
+    [SerializeField] private TextMeshProUGUI _fadeText;
 
     [SerializeField] private GameObject _resultUIObject;
     [SerializeField] private Slider _resultSlider;
 
+    private RawImage[] _eyesIcons;
     private int _nextEyeIndex = 0;
+
     public bool WasFullyEnabled { get; private set; } = false;
     private Coroutine _fadeCoroutine;
 
-    void Start()
+    private void Start()
     {
-        if (_eyesIcons != null)
-        {
-            for (int i = 0; i < _eyesIcons.Length; i++)
-            {
-                if (_eyesIcons[i] != null)
-                    _eyesIcons[i].SetActive(false);
-            }
-        }
-
-        _nextEyeIndex = 0;
-        WasFullyEnabled = false;
+        CreateEyeIcons(_eyeIconCount);
 
         if (_fadeImg != null)
             _fadeImg.gameObject.SetActive(false);
@@ -61,8 +59,57 @@ public class UIManager : MonoBehaviour
         _resultSlider.value = normalized;
     }
 
-    void Update()
+    public void EnsureEyeIconCapacity(int requiredCount)
     {
+        int safeCount = Mathf.Max(0, requiredCount);
+
+        if (_eyesIcons != null && _eyesIcons.Length == safeCount)
+        {
+            ResetEyes();
+            return;
+        }
+
+        CreateEyeIcons(safeCount);
+    }
+
+    private void CreateEyeIcons(int count)
+    {
+        if (_eyesIconPos == null || _eyeIconTexture == null || count < 0)
+        {
+            _eyesIcons = Array.Empty<RawImage>();
+            _nextEyeIndex = 0;
+            WasFullyEnabled = false;
+            return;
+        }
+
+        Transform parent = _eyesIconPos.transform;
+
+        for (int i = parent.childCount - 1; i >= 0; i--)
+            Destroy(parent.GetChild(i).gameObject);
+
+        _eyesIcons = new RawImage[count];
+
+        float startX = -_eyeIconSpacing * (count - 1) * 0.5f;
+
+        for (int i = 0; i < count; i++)
+        {
+            GameObject iconObject = new GameObject($"EyeIcon_{i}", typeof(RectTransform), typeof(CanvasRenderer), typeof(RawImage));
+            iconObject.transform.SetParent(parent, false);
+
+            RawImage icon = iconObject.GetComponent<RawImage>();
+            icon.texture = _eyeIconTexture;
+
+            RectTransform rect = icon.rectTransform;
+            rect.sizeDelta = _eyeIconSize;
+            rect.anchoredPosition3D = new Vector3(startX + (_eyeIconSpacing * i), 0f, 0f);
+
+            iconObject.SetActive(false);
+            _eyesIcons[i] = icon;
+        }
+
+        _eyeIconCount = count;
+        _nextEyeIndex = 0;
+        WasFullyEnabled = false;
     }
 
     public void EnableNextEyeIcon()
@@ -70,31 +117,34 @@ public class UIManager : MonoBehaviour
         if (_eyesIcons == null || _nextEyeIndex >= _eyesIcons.Length)
             return;
 
-        var go = _eyesIcons[_nextEyeIndex];
-        if (go != null)
-            go.SetActive(true);
+        RawImage icon = _eyesIcons[_nextEyeIndex];
+        if (icon != null)
+            icon.gameObject.SetActive(true);
 
         _nextEyeIndex++;
 
         if (_nextEyeIndex >= _eyesIcons.Length)
             WasFullyEnabled = true;
+
+        RearrangeActiveEyes();
     }
 
     public void DisableEyeAtIndex(int index)
     {
-        Debug.Log("비활성화 요청 인덱스: " + index);
         if (_eyesIcons == null)
             return;
 
         if (index < 0 || index >= _eyesIcons.Length)
             return;
 
-        var go = _eyesIcons[index];
-        if (go != null)
-            go.SetActive(false);
+        RawImage icon = _eyesIcons[index];
+        if (icon != null)
+            icon.gameObject.SetActive(false);
 
         if (index < _nextEyeIndex)
             _nextEyeIndex = index;
+
+        RearrangeActiveEyes();
     }
 
     public bool DisableFirstEnabledEye()
@@ -104,16 +154,69 @@ public class UIManager : MonoBehaviour
 
         for (int i = 0; i < _eyesIcons.Length; i++)
         {
-            if (_eyesIcons[i] != null && _eyesIcons[i].activeSelf)
+            if (_eyesIcons[i] != null && _eyesIcons[i].gameObject.activeSelf)
             {
-                _eyesIcons[i].SetActive(false);
+                _eyesIcons[i].gameObject.SetActive(false);
+
                 if (i < _nextEyeIndex)
                     _nextEyeIndex = i;
+
+                RearrangeActiveEyes();
                 return true;
             }
         }
 
         return false;
+    }
+
+    private void RearrangeActiveEyes()
+    {
+        if (_eyesIcons == null || _eyesIcons.Length == 0)
+            return;
+
+        List<RawImage> activeEyes = new List<RawImage>();
+        for (int i = 0; i < _eyesIcons.Length; i++)
+        {
+            if (_eyesIcons[i] != null && _eyesIcons[i].gameObject.activeSelf)
+                activeEyes.Add(_eyesIcons[i]);
+        }
+
+        int count = activeEyes.Count;
+        if (count == 0)
+            return;
+
+        float[] xPositions = GetXPositions(count);
+
+        for (int i = 0; i < count; i++)
+            SetIconLocalPosition(activeEyes[i], xPositions[i], 0f, 0f);
+    }
+
+    private float[] GetXPositions(int count)
+    {
+        if (count == 1)
+            return new[] { 0f };
+
+        if (count == 2)
+            return new[] { -100f, 100f };
+
+        if (count == 3)
+            return new[] { -150f, 0f, 150f };
+
+        float spacing = 150f;
+        float startX = -spacing * (count - 1) * 0.5f;
+        float[] positions = new float[count];
+        for (int i = 0; i < count; i++)
+            positions[i] = startX + spacing * i;
+
+        return positions;
+    }
+
+    private void SetIconLocalPosition(RawImage icon, float x, float y, float z)
+    {
+        if (icon == null)
+            return;
+
+        icon.rectTransform.anchoredPosition3D = new Vector3(x, y, z);
     }
 
     public bool AreAllEyesEnabled()
@@ -123,7 +226,7 @@ public class UIManager : MonoBehaviour
 
         for (int i = 0; i < _eyesIcons.Length; i++)
         {
-            if (_eyesIcons[i] == null || !_eyesIcons[i].activeSelf)
+            if (_eyesIcons[i] == null || !_eyesIcons[i].gameObject.activeSelf)
                 return false;
         }
 
@@ -137,7 +240,7 @@ public class UIManager : MonoBehaviour
 
         for (int i = 0; i < _eyesIcons.Length; i++)
         {
-            if (_eyesIcons[i] != null && _eyesIcons[i].activeSelf)
+            if (_eyesIcons[i] != null && _eyesIcons[i].gameObject.activeSelf)
                 return false;
         }
 
@@ -203,6 +306,7 @@ public class UIManager : MonoBehaviour
     {
         if (_fadeImg == null)
             return;
+
         Color c = _fadeImg.color;
         c.a = a;
         _fadeImg.color = c;
@@ -212,6 +316,7 @@ public class UIManager : MonoBehaviour
     {
         if (_fadeText == null)
             return;
+
         Color c = _fadeText.color;
         c.a = a;
         _fadeText.color = c;
@@ -224,7 +329,7 @@ public class UIManager : MonoBehaviour
             for (int i = 0; i < _eyesIcons.Length; i++)
             {
                 if (_eyesIcons[i] != null)
-                    _eyesIcons[i].SetActive(false);
+                    _eyesIcons[i].gameObject.SetActive(false);
             }
         }
 
@@ -239,7 +344,7 @@ public class UIManager : MonoBehaviour
 
         for (int i = 0; i < _eyesIcons.Length; i++)
         {
-            if (_eyesIcons[i] != null && _eyesIcons[i].activeSelf)
+            if (_eyesIcons[i] != null && _eyesIcons[i].gameObject.activeSelf)
                 return true;
         }
 

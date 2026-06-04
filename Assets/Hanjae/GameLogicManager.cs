@@ -17,6 +17,8 @@ public class GameLogicManager : MonoBehaviour
     [SerializeField] private StageConfig[] _stages;
     [SerializeField] private int _currentStageIndex;
     [SerializeField] private PlayerCamera _playerCamera;
+    [SerializeField] private float _blackoutStartBuffer = 5f;
+    [SerializeField] private float _blackoutEndBuffer = 5f;
 
     private SoundManager _soundManager;
     private EventManager _eventManager;
@@ -199,8 +201,12 @@ public class GameLogicManager : MonoBehaviour
 
         _blackoutEventsTriggered = 0;
         _blackoutEventCountForCurrentStage = GetCurrentStageBlackoutEventCount();
-        _nextBlackoutEventTime = _blackoutEventCountForCurrentStage > 0
-            ? GetBlackoutEventStep()
+
+        _ui_manager?.EnsureEyeIconCapacity(_blackoutEventCountForCurrentStage);
+
+        float step = GetBlackoutEventStep();
+        _nextBlackoutEventTime = (_blackoutEventCountForCurrentStage > 0 && step != float.MaxValue)
+            ? GetFirstBlackoutEventTime()
             : float.MaxValue;
     }
 
@@ -233,12 +239,6 @@ public class GameLogicManager : MonoBehaviour
     {
         _ui_manager?.EnableNextEyeIcon();
 
-        if (_ui_manager != null && _ui_manager.WasFullyEnabled)
-        {
-            ChangeState(GameState.Result);
-            return;
-        }
-
         int randInt = Random.Range(0, 3);
         if (randInt == 0)
         {
@@ -254,7 +254,6 @@ public class GameLogicManager : MonoBehaviour
     private void ExitBlackout()
     {
         Debug.Log("Blackout 상태 종료");
-        _eventManager?.ClearBlackoutEventActors();
     }
 
     private void EnterResult()
@@ -373,13 +372,39 @@ public class GameLogicManager : MonoBehaviour
         return Mathf.Max(0, _stages[index].BlackoutEventCount);
     }
 
+    private float GetFirstBlackoutEventTime()
+    {
+        if (_blackoutEventCountForCurrentStage <= 0)
+            return float.MaxValue;
+
+        float safeDuration = Mathf.Max(0.01f, _blackoutDuration);
+        float startBuffer = Mathf.Clamp(_blackoutStartBuffer, 0f, safeDuration);
+        float endBuffer = Mathf.Clamp(_blackoutEndBuffer, 0f, safeDuration - startBuffer);
+        float usableDuration = safeDuration - startBuffer - endBuffer;
+
+        if (usableDuration <= 0f)
+            return float.MaxValue;
+
+        if (_blackoutEventCountForCurrentStage == 1)
+            return startBuffer + (usableDuration * 0.5f);
+
+        return startBuffer;
+    }
+
     private float GetBlackoutEventStep()
     {
         if (_blackoutEventCountForCurrentStage <= 0)
             return float.MaxValue;
 
         float safeDuration = Mathf.Max(0.01f, _blackoutDuration);
-        return safeDuration / (_blackoutEventCountForCurrentStage + 1f);
+        float startBuffer = Mathf.Clamp(_blackoutStartBuffer, 0f, safeDuration);
+        float endBuffer = Mathf.Clamp(_blackoutEndBuffer, 0f, safeDuration - startBuffer);
+        float usableDuration = safeDuration - startBuffer - endBuffer;
+
+        if (usableDuration <= 0f)
+            return float.MaxValue;
+
+        return usableDuration / _blackoutEventCountForCurrentStage;
     }
 
     private bool IsLastStage()
