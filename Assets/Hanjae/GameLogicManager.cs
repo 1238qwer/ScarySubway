@@ -3,7 +3,20 @@ using UnityEngine.InputSystem;
 
 public class GameLogicManager : MonoBehaviour
 {
+    [System.Serializable]
+    private class StageConfig
+    {
+        public int Stage = 0;
+        [Min(0)] public int BlackoutEventCount = 3;
+    }
+
     [SerializeField] private HeadBob _headBob;
+    [SerializeField] private float _normalDuration = 10f;
+    [SerializeField] private float _blackoutDuration = 20f;
+    [SerializeField] private float _resultDuration = 10f;
+    [SerializeField] private StageConfig[] _stages;
+    [SerializeField] private int _currentStageIndex;
+    [SerializeField] private PlayerCamera _playerCamera;
 
     private SoundManager _soundManager;
     private EventManager _eventManager;
@@ -11,22 +24,16 @@ public class GameLogicManager : MonoBehaviour
     private UIManager _ui_manager;
     private DirectionCameraManager _directionCameraManager;
 
-    [SerializeField] private float _blackoutEventInterval = 5f;
-
-    // 상태 지속 시간 (초)
-    [SerializeField] private float _normalDuration = 20f;
-    [SerializeField] private float _blackoutDuration = 20f;
-    [SerializeField] private float _resultDuration = 10f; // Result에서 허용되는 시간
-
-    private float _blackoutEventTimer;
     private float _stateTimer;
+    private float _resultTimer;
+    private bool _resultTimeoutHandled;
+    private bool _nextStageLogged;
+    private bool _isGameCleared;
+    private bool _isInputLocked; // 입력 잠금 상태 추가
 
-    // Result 상태에서 "다음스테이지로" 로그가 여러번 찍히지 않도록 기록
-    private bool _nextStageLogged = false;
-
-    // Result 타임아웃 처리 플래그/타이머
-    private float _resultTimer = 0f;
-    private bool _resultTimeoutHandled = false;
+    private int _blackoutEventsTriggered;
+    private int _blackoutEventCountForCurrentStage;
+    private float _nextBlackoutEventTime;
 
     public enum GameState
     {
@@ -44,246 +51,353 @@ public class GameLogicManager : MonoBehaviour
         _eventManager = Object.FindAnyObjectByType<EventManager>();
         _ui_manager = Object.FindAnyObjectByType<UIManager>();
         _directionCameraManager = Object.FindAnyObjectByType<DirectionCameraManager>();
+
+        if (_playerCamera == null)
+            _playerCamera = Object.FindAnyObjectByType<PlayerCamera>();
     }
 
     private void Start()
     {
+        ClampStageIndex();
         _directionCameraManager?.StartDirectionCamera();
-        _stateTimer = 0f;
-        _blackoutEventTimer = 0f;
-        _resultTimer = 0f;
-        _resultTimeoutHandled = false;
+        ResetAllRuntimeFlags();
+        EnterState(CurrentState);
     }
 
-    void Update()
+    private void Update()
     {
-        UpdateStateTimer();
-        UpdateBlackoutEvents();
-        UpdateResultTimer();
-        HandleInput();
-    }
-
-    void UpdateStateTimer()
-    {
-        if (CurrentState == GameState.Result)
+        if (_isGameCleared)
             return;
 
-        _stateTimer += Time.deltaTime;
+        HandleGlobalInput();
+        UpdateState(CurrentState);
+    }
 
-        switch (CurrentState)
+    private void HandleGlobalInput()
+    {
+        if (_isInputLocked) // 입력이 잠겨있으면 반응하지 않음
+            return;
+
+        if (Keyboard.current.digit1Key.wasPressedThisFrame)
+            ChangeState(GameState.Blackout);
+
+        if (Keyboard.current.digit2Key.wasPressedThisFrame)
+            ChangeState(GameState.Normal);
+
+        if (Keyboard.current.digit3Key.wasPressedThisFrame)
+            _eventManager?.ActorNeckRotateToPlayer();
+
+        if (CurrentState != GameState.Result || _ui_manager == null || !_ui_manager.HasAnyEnabledEyes())
+            return;
+
+        if (_playerCamera == null || _eventManager == null)
+            return;
+
+        if (!Mouse.current.leftButton.wasPressedThisFrame)
+            return;
+
+        if (!_playerCamera.TryGetLookedActor(out Actor lookedActor))
+            return;
+
+        if (!_eventManager.WasBlackoutEventActor(lookedActor))
+            return;
+
+        if (_ui_manager.DisableFirstEnabledEye())
+            TryHandleAllEyesDisabledInResult();
+    }
+
+    private void ChangeState(GameState nextState)
+    {
+        if (CurrentState == nextState)
+            return;
+
+        ExitState(CurrentState);
+        CurrentState = nextState;
+        _stateTimer = 0f;
+        EnterState(CurrentState);
+    }
+
+    private void EnterState(GameState state)
+    {
+        switch (state)
         {
             case GameState.Normal:
-                if (_stateTimer >= _normalDuration)
-                    SetState(GameState.Blackout);
+                EnterNormal();
                 break;
-
             case GameState.Blackout:
-                if (_stateTimer >= _blackoutDuration)
-                    SetState(GameState.Result);
+                EnterBlackout();
+                break;
+            case GameState.Result:
+                EnterResult();
                 break;
         }
     }
 
-    void UpdateBlackoutEvents()
+    private void UpdateState(GameState state)
     {
-        if (CurrentState != GameState.Blackout)
+        switch (state)
+        {
+            case GameState.Normal:
+                UpdateNormal();
+                break;
+            case GameState.Blackout:
+                UpdateBlackout();
+                break;
+            case GameState.Result:
+                UpdateResult();
+                break;
+        }
+    }
+
+    private void ExitState(GameState state)
+    {
+        switch (state)
+        {
+            case GameState.Normal:
+                ExitNormal();
+                break;
+            case GameState.Blackout:
+                ExitBlackout();
+                break;
+            case GameState.Result:
+                ExitResult();
+                break;
+        }
+    }
+
+    private void EnterNormal()
+    {
+        _headBob?.StopBob();
+        _lightManager?.StopLights();
+        _soundManager?.NormalAmbient();
+        _ui_manager?.ResetEyes();
+        _ui_manager?.SetResultUIActive(false);
+        _eventManager?.ClearBlackoutEventActors();
+    }
+
+    private void UpdateNormal()
+    {
+        _stateTimer += Time.deltaTime;
+        if (_stateTimer >= _normalDuration)
+            ChangeState(GameState.Blackout);
+    }
+
+    private void ExitNormal()
+    {
+        Debug.Log("Normal 상태 종료");
+    }
+
+    private void EnterBlackout()
+    {
+        _headBob?.StartBob();
+        _lightManager?.StartLights();
+        _soundManager?.PlayAnnouncement();
+        _soundManager?.DistortionAmbient();
+        _ui_manager?.SetResultUIActive(false);
+
+        _eventManager?.ClearBlackoutEventActors();
+
+        _blackoutEventsTriggered = 0;
+        _blackoutEventCountForCurrentStage = GetCurrentStageBlackoutEventCount();
+        _nextBlackoutEventTime = _blackoutEventCountForCurrentStage > 0
+            ? GetBlackoutEventStep()
+            : float.MaxValue;
+    }
+
+    private void UpdateBlackout()
+    {
+        _stateTimer += Time.deltaTime;
+
+        if (_stateTimer >= _blackoutDuration)
+        {
+            ChangeState(GameState.Result);
+            return;
+        }
+
+        if (_blackoutEventsTriggered >= _blackoutEventCountForCurrentStage)
             return;
 
-        _blackoutEventTimer += Time.deltaTime;
+        float step = GetBlackoutEventStep();
+        while (_blackoutEventsTriggered < _blackoutEventCountForCurrentStage && _stateTimer >= _nextBlackoutEventTime)
+        {
+            TriggerBlackoutEvent();
+            _blackoutEventsTriggered++;
+            _nextBlackoutEventTime += step;
 
-        if (_blackoutEventTimer < _blackoutEventInterval)
-            return;
+            if (CurrentState != GameState.Blackout)
+                return;
+        }
+    }
 
-        _blackoutEventTimer = 0f;
-
-        if (_ui_manager != null)
-            _ui_manager.EnableNextEyeIcon();
+    private void TriggerBlackoutEvent()
+    {
+        _ui_manager?.EnableNextEyeIcon();
 
         if (_ui_manager != null && _ui_manager.WasFullyEnabled)
         {
-            SetState(GameState.Result);
+            ChangeState(GameState.Result);
             return;
         }
 
-        int randInt = UnityEngine.Random.Range(0, 3);
-
+        int randInt = Random.Range(0, 3);
         if (randInt == 0)
         {
-            _eventManager.ActorJumpSquare();
-            _soundManager.PlayJumpsquareSound();
+            _eventManager?.ActorJumpSquare();
+            _soundManager?.PlayJumpsquareSound();
         }
         else
         {
-            _eventManager.ActorNeckRotateToPlayer();
+            _eventManager?.ActorNeckRotateToPlayer();
         }
     }
 
-    // Result 상태에서 플레이어가 시간 내에 모든 눈을 끄지 못했는지 검사
-    void UpdateResultTimer()
+    private void ExitBlackout()
     {
-        if (CurrentState != GameState.Result)
-            return;
+        Debug.Log("Blackout 상태 종료");
+        _eventManager?.ClearBlackoutEventActors();
+    }
 
-        // 이미 타임아웃 처리되었으면 더 이상 검사하지 않음
+    private void EnterResult()
+    {
+        _headBob?.StopBob();
+        _lightManager?.StopLights();
+        _soundManager?.NormalAmbient();
+        _resultTimer = 0f;
+        _resultTimeoutHandled = false;
+        _nextStageLogged = false;
+
+        _ui_manager?.SetResultUIActive(true);
+        _ui_manager?.SetResultSliderByTime(_resultDuration, _resultDuration);
+    }
+
+    private void UpdateResult()
+    {
         if (_resultTimeoutHandled)
             return;
 
-        // 플레이어가 이미 모든 눈을 끄고 정상으로 돌아간 경우(다른 로직에서 처리되었을 것)
         if (_ui_manager != null && _ui_manager.AreAllEyesDisabled())
             return;
 
         _resultTimer += Time.deltaTime;
 
+        float remainingTime = Mathf.Max(0f, _resultDuration - _resultTimer);
+        _ui_manager?.SetResultSliderByTime(remainingTime, _resultDuration);
+
         if (_resultTimer >= _resultDuration)
-        {
             HandleResultTimeout();
-        }
     }
 
-    void HandleResultTimeout()
+    private void ExitResult()
+    {
+        Debug.Log("Result 상태 종료");
+    }
+
+    private void HandleResultTimeout()
     {
         _resultTimeoutHandled = true;
+        _isInputLocked = true;
 
-        // 페이드로 알림
         if (_ui_manager != null)
             _ui_manager.StartFade("GO TO FIRST STATION..", ResetToFirstState);
+
         Debug.Log("Result 타임아웃: 첫 상태로 복귀");
-
-        // 모든 게임정보 초기화 및 첫 상태부터 다시 시작
-        ResetToFirstState();
     }
 
-    void HandleInput()
-    {
-        if (Keyboard.current.digit1Key.wasPressedThisFrame)
-            SetState(GameState.Blackout);
-
-        if (Keyboard.current.digit2Key.wasPressedThisFrame)
-            SetState(GameState.Normal);
-
-        if (Keyboard.current.digit3Key.wasPressedThisFrame)
-            _eventManager.ActorNeckRotateToPlayer();
-
-        // Result 상태에서 Q/W/E로 눈을 끌 때 모든 눈이 꺼지면 디버그 출력
-        if (CurrentState == GameState.Result && _ui_manager != null && _ui_manager.WasFullyEnabled)
-        {
-            if (Keyboard.current.qKey.wasPressedThisFrame)
-            {
-                _ui_manager.DisableEyeAtIndex(0);
-                CheckAllEyesOffAndLog();
-            }
-
-            if (Keyboard.current.wKey.wasPressedThisFrame)
-            {
-                _ui_manager.DisableEyeAtIndex(1);
-                CheckAllEyesOffAndLog();
-            }
-
-            if (Keyboard.current.eKey.wasPressedThisFrame)
-            {
-                _ui_manager.DisableEyeAtIndex(2);
-                CheckAllEyesOffAndLog();
-            }
-        }
-    }
-
-    private void CheckAllEyesOffAndLog()
+    private void TryHandleAllEyesDisabledInResult()
     {
         if (_nextStageLogged)
             return;
 
-        if (_ui_manager != null && _ui_manager.AreAllEyesDisabled())
-        {
-            _ui_manager.StartFade("GO TO NEXT STATION...");
-            Debug.Log("다음스테이지로");
+        if (_ui_manager == null || !_ui_manager.AreAllEyesDisabled())
+            return;
 
-            // 다음 스테이지 준비: Normal 상태로 돌리기 전에 UI 상태 초기화
-            SetState(GameState.Normal);
-            _nextStageLogged = true;
+        _nextStageLogged = true;
+        _resultTimeoutHandled = true;
+
+        if (IsLastStage())
+        {
+            _ui_manager.StartFade("CLEAR", () => { });
+            _isGameCleared = true;
+            Debug.Log("게임 클리어!");
+            return;
         }
+        else
+        {
+            _ui_manager.StartFade("GO TO NEXT STATION...", MoveToNextStage);
+        }
+
+        Debug.Log("다음스테이지로");
     }
 
-    // 모든 게임정보 초기화 및 DirectionCameraManager.StartDirectionCamera()부터 시작
+    private void MoveToNextStage()
+    {
+        _isInputLocked = false;
+        _currentStageIndex++;
+        ChangeState(GameState.Normal);
+        _resultTimer = 0f;
+        _resultTimeoutHandled = false;
+    }
+
     private void ResetToFirstState()
     {
-        // UI 리셋
+        _isInputLocked = false;
+        _currentStageIndex = 0;
+        _isGameCleared = false;
         _ui_manager?.ResetEyes();
-
-        // 상태와 타이머 리셋
         _resultTimer = 0f;
         _resultTimeoutHandled = false;
         _nextStageLogged = false;
-
-        // 기타 매니저 초기화 가능한 항목들(있다면 호출)
-        _headBob?.StopBob();
-        _lightManager?.StopLights();
-        _soundManager?.NormalAmbient();
-
-        // 첫 연출 재생(카메라) 및 상태를 Normal로 설정
         _directionCameraManager?.StartDirectionCamera();
-        SetState(GameState.Normal);
+        ChangeState(GameState.Normal);
     }
 
-    void SetState(GameState state)
+    private void ResetAllRuntimeFlags()
     {
-        if (CurrentState == state)
-            return;
-
-        CurrentState = state;
-
         _stateTimer = 0f;
-        _blackoutEventTimer = 0f;
-
-        // Result 진입 시 로그 플래그 초기화 및 타이머 초기화
-        if (CurrentState == GameState.Result)
-        {
-            _nextStageLogged = false;
-            _resultTimer = 0f;
-            _resultTimeoutHandled = false;
-        }
-
-        switch (CurrentState)
-        {
-            case GameState.Normal:
-                ApplyNormalState();
-                break;
-
-            case GameState.Blackout:
-                ApplyBlackoutState();
-                break;
-
-            case GameState.Result:
-                ApplyResultState();
-                break;
-        }
-    }
-
-    void ApplyNormalState()
-    {
-        _headBob.StopBob();
-        _lightManager.StopLights();
-        _soundManager.NormalAmbient();
-
-        // 새 사이클을 위해 UI의 눈 상태와 플래그를 리셋
-        _ui_manager?.ResetEyes();
-    }
-
-    void ApplyBlackoutState()
-    {
-        _headBob.StartBob();
-        _lightManager.StartLights();
-        _soundManager.PlayAnnouncement();
-        _soundManager.DistortionAmbient();
-    }
-
-    void ApplyResultState()
-    {
-        _headBob.StopBob();
-        _lightManager.StopLights();
-        _soundManager.NormalAmbient();
-
-        // Result 상태 진입 시 타이머 초기화
         _resultTimer = 0f;
         _resultTimeoutHandled = false;
+        _nextStageLogged = false;
+        _isGameCleared = false;
+        _isInputLocked = false;
+        _blackoutEventsTriggered = 0;
+        _blackoutEventCountForCurrentStage = 0;
+        _nextBlackoutEventTime = float.MaxValue;
+    }
+
+    private int GetCurrentStageBlackoutEventCount()
+    {
+        if (_stages == null || _stages.Length == 0)
+            return 0;
+
+        int index = Mathf.Clamp(_currentStageIndex, 0, _stages.Length - 1);
+        return Mathf.Max(0, _stages[index].BlackoutEventCount);
+    }
+
+    private float GetBlackoutEventStep()
+    {
+        if (_blackoutEventCountForCurrentStage <= 0)
+            return float.MaxValue;
+
+        float safeDuration = Mathf.Max(0.01f, _blackoutDuration);
+        return safeDuration / (_blackoutEventCountForCurrentStage + 1f);
+    }
+
+    private bool IsLastStage()
+    {
+        if (_stages == null || _stages.Length == 0)
+            return true;
+
+        return _currentStageIndex >= _stages.Length - 1;
+    }
+
+    private void ClampStageIndex()
+    {
+        if (_stages == null || _stages.Length == 0)
+        {
+            _currentStageIndex = 0;
+            return;
+        }
+
+        _currentStageIndex = Mathf.Clamp(_currentStageIndex, 0, _stages.Length - 1);
     }
 }

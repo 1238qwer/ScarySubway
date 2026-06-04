@@ -4,15 +4,13 @@ using UnityEngine;
 public class ActorManager : MonoBehaviour
 {
     [SerializeField] private GameObject _actorPrefab;
-
     [SerializeField] private Transform[] _actorTransforms;
-
     [SerializeField] private Material[] _actorHeadMats;
     [SerializeField] private Material[] _actorBodyMats;
-
     [SerializeField] private Transform _jumpSquarePos;
 
     private Actor[] _actors;
+    private readonly HashSet<Actor> _blackoutEventActors = new HashSet<Actor>();
 
     void Start()
     {
@@ -35,7 +33,6 @@ public class ActorManager : MonoBehaviour
         for (int i = 0; i < combinations.Count; i++)
         {
             int rand = Random.Range(i, combinations.Count);
-
             (combinations[i], combinations[rand]) =
             (combinations[rand], combinations[i]);
         }
@@ -52,7 +49,6 @@ public class ActorManager : MonoBehaviour
                     transform);
 
             Actor actor = obj.GetComponent<Actor>();
-
             _actors[i] = actor;
 
             if (i < combinations.Count)
@@ -64,17 +60,41 @@ public class ActorManager : MonoBehaviour
         }
     }
 
+    public void ClearBlackoutEventActors()
+    {
+        _blackoutEventActors.Clear();
+    }
+
+    public bool WasBlackoutEventActor(Actor actor)
+    {
+        return actor != null && _blackoutEventActors.Contains(actor);
+    }
+
     public void ActorNeckRotateToPlayer()
     {
-        _actors[
-            Random.Range(0, _actors.Length)
-        ].NeckRotateToPlayer();
+        Actor actor = GetRandomActor();
+        if (actor == null)
+            return;
+
+        _blackoutEventActors.Add(actor);
+        actor.NeckRotateToPlayer();
     }
 
     public void ActorJumpSquare()
     {
-        _actors[
-            Random.Range(0, _actors.Length)
-        ].JumpSquare(_jumpSquarePos);
+        Actor actor = GetRandomActor();
+        if (actor == null)
+            return;
+
+        _blackoutEventActors.Add(actor);
+        actor.JumpSquare(_jumpSquarePos);
+    }
+
+    private Actor GetRandomActor()
+    {
+        if (_actors == null || _actors.Length == 0)
+            return null;
+
+        return _actors[Random.Range(0, _actors.Length)];
     }
 }
