@@ -72,7 +72,7 @@ public class ActorManager : MonoBehaviour
 
     public void ActorNeckRotateToPlayer()
     {
-        Actor actor = GetRandomActor();
+        Actor actor = GetRandomUnselectedActor();
         if (actor == null)
             return;
 
@@ -82,7 +82,7 @@ public class ActorManager : MonoBehaviour
 
     public void ActorJumpSquare()
     {
-        Actor actor = GetRandomActor();
+        Actor actor = GetRandomUnselectedActor();
         if (actor == null)
             return;
 
@@ -90,11 +90,27 @@ public class ActorManager : MonoBehaviour
         actor.JumpSquare(_jumpSquarePos);
     }
 
-    private Actor GetRandomActor()
+    public int GetActorCount()
+    {
+        return _actors != null ? _actors.Length : 0;
+    }
+
+    private Actor GetRandomUnselectedActor()
     {
         if (_actors == null || _actors.Length == 0)
             return null;
 
-        return _actors[Random.Range(0, _actors.Length)];
+        List<Actor> candidates = new List<Actor>();
+        for (int i = 0; i < _actors.Length; i++)
+        {
+            Actor actor = _actors[i];
+            if (actor != null && !_blackoutEventActors.Contains(actor))
+                candidates.Add(actor);
+        }
+
+        if (candidates.Count == 0)
+            return null;
+
+        return candidates[Random.Range(0, candidates.Count)];
     }
 }

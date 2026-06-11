@@ -2486,15 +2486,15 @@ MonoBehaviour:
   _resultDuration: 10
   _stages:
   - Stage: 1
-    BlackoutEventCount: 3
+    BlackoutEventCount: 1
   - Stage: 2
-    BlackoutEventCount: 4
+    BlackoutEventCount: 2
   - Stage: 3
-    BlackoutEventCount: 5
+    BlackoutEventCount: 3
   - Stage: 4
-    BlackoutEventCount: 5
+    BlackoutEventCount: 4
   - Stage: 5
-    BlackoutEventCount: 7
+    BlackoutEventCount: 5
   _currentStageIndex: 0
   _playerCamera: {fileID: 1424446387}
   _blackoutStartBuffer: 5

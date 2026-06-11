@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -36,6 +37,8 @@ public class GameLogicManager : MonoBehaviour
     private int _blackoutEventsTriggered;
     private int _blackoutEventCountForCurrentStage;
     private float _nextBlackoutEventTime;
+
+    private readonly HashSet<Actor> _resolvedActorsInResult = new HashSet<Actor>();
 
     public enum GameState
     {
@@ -77,7 +80,7 @@ public class GameLogicManager : MonoBehaviour
 
     private void HandleGlobalInput()
     {
-        if (_isInputLocked) // 입력이 잠겨있으면 반응하지 않음
+        if (_isInputLocked)
             return;
 
         if (Keyboard.current.digit1Key.wasPressedThisFrame)
@@ -104,8 +107,14 @@ public class GameLogicManager : MonoBehaviour
         if (!_eventManager.WasBlackoutEventActor(lookedActor))
             return;
 
+        if (_resolvedActorsInResult.Contains(lookedActor))
+            return;
+
         if (_ui_manager.DisableFirstEnabledEye())
+        {
+            _resolvedActorsInResult.Add(lookedActor);
             TryHandleAllEyesDisabledInResult();
+        }
     }
 
     private void ChangeState(GameState nextState)
@@ -200,7 +209,10 @@ public class GameLogicManager : MonoBehaviour
         _eventManager?.ClearBlackoutEventActors();
 
         _blackoutEventsTriggered = 0;
-        _blackoutEventCountForCurrentStage = GetCurrentStageBlackoutEventCount();
+
+        int stageEventCount = GetCurrentStageBlackoutEventCount();
+        int actorCount = _eventManager != null ? _eventManager.GetActorCount() : 0;
+        _blackoutEventCountForCurrentStage = Mathf.Min(stageEventCount, actorCount);
 
         _ui_manager?.EnsureEyeIconCapacity(_blackoutEventCountForCurrentStage);
 
@@ -237,18 +249,21 @@ public class GameLogicManager : MonoBehaviour
 
     private void TriggerBlackoutEvent()
     {
-        _ui_manager?.EnableNextEyeIcon();
+        if (_eventManager == null)
+            return;
 
         int randInt = Random.Range(0, 3);
         if (randInt == 0)
         {
-            _eventManager?.ActorJumpSquare();
+            _eventManager.ActorJumpSquare();
             _soundManager?.PlayJumpsquareSound();
         }
         else
         {
-            _eventManager?.ActorNeckRotateToPlayer();
+            _eventManager.ActorNeckRotateToPlayer();
         }
+
+        _ui_manager?.EnableNextEyeIcon();
     }
 
     private void ExitBlackout()
@@ -264,6 +279,7 @@ public class GameLogicManager : MonoBehaviour
         _resultTimer = 0f;
         _resultTimeoutHandled = false;
         _nextStageLogged = false;
+        _resolvedActorsInResult.Clear();
 
         _ui_manager?.SetResultUIActive(true);
         _ui_manager?.SetResultSliderByTime(_resultDuration, _resultDuration);

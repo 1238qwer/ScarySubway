@@ -32,4 +32,9 @@ public class EventManager : MonoBehaviour
     {
         return _actorManager != null && _actorManager.WasBlackoutEventActor(actor);
     }
+
+    public int GetActorCount()
+    {
+        return _actorManager != null ? _actorManager.GetActorCount() : 0;
+    }
 }

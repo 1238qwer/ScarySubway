@@ -125,8 +125,6 @@ public class UIManager : MonoBehaviour
 
         if (_nextEyeIndex >= _eyesIcons.Length)
             WasFullyEnabled = true;
-
-        RearrangeActiveEyes();
     }
 
     public void DisableEyeAtIndex(int index)
@@ -143,8 +141,6 @@ public class UIManager : MonoBehaviour
 
         if (index < _nextEyeIndex)
             _nextEyeIndex = index;
-
-        RearrangeActiveEyes();
     }
 
     public bool DisableFirstEnabledEye()
@@ -161,7 +157,6 @@ public class UIManager : MonoBehaviour
                 if (i < _nextEyeIndex)
                     _nextEyeIndex = i;
 
-                RearrangeActiveEyes();
                 return true;
             }
         }
