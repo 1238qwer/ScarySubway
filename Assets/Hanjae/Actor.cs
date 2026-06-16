@@ -3,7 +3,7 @@ using UnityEngine;
 public class Actor : MonoBehaviour
 {
     private ActorManager _actorManager;
-    private GameObject _head;
+    [SerializeField] private GameObject _head;
 
     float rottime;
     float jumpTime;
@@ -22,10 +22,6 @@ public class Actor : MonoBehaviour
     void Start()
     {
         _actorManager = GetComponentInParent<ActorManager>();
-
-        _head = transform.Find("Capsule")
-            .transform.Find("Head")
-            .gameObject;
 
         oriPos = gameObject.transform.position;
         oriRot = gameObject.transform.rotation;

@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class ActorManager : MonoBehaviour
 {
-    [SerializeField] private GameObject _actorPrefab;
+    [SerializeField] private GameObject[] _actorPrefabs;
     [SerializeField] private Transform[] _actorTransforms;
     [SerializeField] private Material[] _actorHeadMats;
     [SerializeField] private Material[] _actorBodyMats;
@@ -19,23 +19,23 @@ public class ActorManager : MonoBehaviour
 
     void SpawnActors()
     {
-        List<(Material head, Material body)> combinations =
-            new List<(Material, Material)>();
+        //List<(Material head, Material body)> combinations =
+        //    new List<(Material, Material)>();
 
-        foreach (var head in _actorHeadMats)
-        {
-            foreach (var body in _actorBodyMats)
-            {
-                combinations.Add((head, body));
-            }
-        }
+        //foreach (var head in _actorHeadMats)
+        //{
+        //    foreach (var body in _actorBodyMats)
+        //    {
+        //        combinations.Add((head, body));
+        //    }
+        //}
 
-        for (int i = 0; i < combinations.Count; i++)
-        {
-            int rand = Random.Range(i, combinations.Count);
-            (combinations[i], combinations[rand]) =
-            (combinations[rand], combinations[i]);
-        }
+        //for (int i = 0; i < combinations.Count; i++)
+        //{
+        //    int rand = Random.Range(i, combinations.Count);
+        //    (combinations[i], combinations[rand]) =
+        //    (combinations[rand], combinations[i]);
+        //}
 
         _actors = new Actor[_actorTransforms.Length];
 
@@ -43,7 +43,7 @@ public class ActorManager : MonoBehaviour
         {
             GameObject obj =
                 Instantiate(
-                    _actorPrefab,
+                    _actorPrefabs[Random.Range(0, _actorPrefabs.Length)],
                     _actorTransforms[i].position,
                     _actorTransforms[i].rotation,
                     transform);
@@ -51,12 +51,12 @@ public class ActorManager : MonoBehaviour
             Actor actor = obj.GetComponent<Actor>();
             _actors[i] = actor;
 
-            if (i < combinations.Count)
-            {
-                actor.SetMaterials(
-                    combinations[i].head,
-                    combinations[i].body);
-            }
+            //if (i < combinations.Count)
+            //{
+            //    actor.SetMaterials(
+            //        combinations[i].head,
+            //        combinations[i].body);
+            //}
         }
     }
 
