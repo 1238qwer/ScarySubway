@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Rendering;
 
 public class GameLogicManager : MonoBehaviour
 {
@@ -11,6 +12,8 @@ public class GameLogicManager : MonoBehaviour
         [Min(0)] public int BlackoutEventCount = 3;
     }
 
+    [SerializeField] private Volume _vignetteVolume;
+    [SerializeField, Range(0f, 1f)] private float _blackoutVignetteWeight = 1f;
     [SerializeField] private HeadBob _headBob;
     [SerializeField] private float _normalDuration = 10f;
     [SerializeField] private float _blackoutDuration = 20f;
@@ -64,6 +67,7 @@ public class GameLogicManager : MonoBehaviour
     private void Start()
     {
         ClampStageIndex();
+        SetVignetteWeight(0f);
         _directionCameraManager?.StartDirectionCamera();
         ResetAllRuntimeFlags();
         EnterState(CurrentState);
@@ -178,6 +182,8 @@ public class GameLogicManager : MonoBehaviour
 
     private void EnterNormal()
     {
+        SetVignetteWeight(0f);
+
         _headBob?.StopBob();
         _lightManager?.StopLights();
         _soundManager?.NormalAmbient();
@@ -200,6 +206,8 @@ public class GameLogicManager : MonoBehaviour
 
     private void EnterBlackout()
     {
+        SetVignetteWeight(_blackoutVignetteWeight);
+
         _headBob?.StartBob();
         _lightManager?.StartLights();
         _soundManager?.PlayAnnouncement();
@@ -252,16 +260,16 @@ public class GameLogicManager : MonoBehaviour
         if (_eventManager == null)
             return;
 
-        int randInt = Random.Range(0, 3);
-        if (randInt == 0)
-        {
-            _eventManager.ActorJumpSquare();
-            _soundManager?.PlayJumpsquareSound();
-        }
-        else
-        {
+        //int randInt = Random.Range(0, 3);
+        //if (randInt == 0)
+        //{
+        //    _eventManager.ActorJumpSquare();
+        //    _soundManager?.PlayJumpsquareSound();
+        //}
+        //else
+        //{
             _eventManager.ActorNeckRotateToPlayer();
-        }
+        //}
 
         _ui_manager?.EnableNextEyeIcon();
     }
@@ -273,6 +281,8 @@ public class GameLogicManager : MonoBehaviour
 
     private void EnterResult()
     {
+        SetVignetteWeight(0f);
+
         _headBob?.StopBob();
         _lightManager?.StopLights();
         _soundManager?.NormalAmbient();
@@ -440,5 +450,13 @@ public class GameLogicManager : MonoBehaviour
         }
 
         _currentStageIndex = Mathf.Clamp(_currentStageIndex, 0, _stages.Length - 1);
+    }
+
+    private void SetVignetteWeight(float weight)
+    {
+        if (_vignetteVolume == null)
+            return;
+
+        _vignetteVolume.weight = Mathf.Clamp01(weight);
     }
 }

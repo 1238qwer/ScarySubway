@@ -13,6 +13,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private int _eyeIconCount = 3;
     [SerializeField] private float _eyeIconSpacing = 150f;
 
+    [SerializeField] private Canvas _fadeCanvas;
     [SerializeField] private Image _fadeImg;
     [SerializeField] private TextMeshProUGUI _fadeText;
 
@@ -28,6 +29,9 @@ public class UIManager : MonoBehaviour
     private void Start()
     {
         CreateEyeIcons(_eyeIconCount);
+
+        if (_fadeCanvas != null)
+            _fadeCanvas.gameObject.SetActive(true);
 
         if (_fadeImg != null)
             _fadeImg.gameObject.SetActive(false);

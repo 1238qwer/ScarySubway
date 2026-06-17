@@ -33,7 +33,7 @@ public class Actor : MonoBehaviour
         {
             rottime += Time.deltaTime;
 
-            if (rottime > 3f)
+            if (rottime > 10f)
             {
                 isRotate = false;
 
