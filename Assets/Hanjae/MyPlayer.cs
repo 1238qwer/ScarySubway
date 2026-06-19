@@ -3,37 +3,36 @@ using UnityEngine.InputSystem;
 
 public class MyPlayer : MonoBehaviour
 {
-    [SerializeField] private float _peekMoveZ = 0.15f;
-    [SerializeField] private float _peekRotateX = 8f;
+    [SerializeField] private float _forwardTiltX = 8f;
+    [SerializeField] private float _sideTiltZ = 10f;
     [SerializeField] private float _lerpSpeed = 8f;
 
-    private float _currentPeekZ;
-    private float _currentPeekXAngle;
+    private float _currentTiltX;
+    private float _currentTiltZ;
+    private Quaternion _baseLocalRotation;
 
-    private float _appliedPeekZ;
-    private float _appliedPeekXAngle;
+    private void Start()
+    {
+        _baseLocalRotation = transform.localRotation;
+    }
 
     private void Update()
     {
-        bool isPeeking = Keyboard.current != null && Keyboard.current.wKey.isPressed;
+        if (Keyboard.current == null)
+            return;
 
-        float targetZ = isPeeking ? _peekMoveZ : 0f;
-        float targetXAngle = isPeeking ? _peekRotateX : 0f;
+        float targetX = Keyboard.current.wKey.isPressed ? _forwardTiltX : 0f;
+
+        float targetZ = 0f;
+        if (Keyboard.current.aKey.isPressed)
+            targetZ = _sideTiltZ;
+        else if (Keyboard.current.dKey.isPressed)
+            targetZ = -_sideTiltZ;
 
         float t = _lerpSpeed * Time.deltaTime;
-        _currentPeekZ = Mathf.Lerp(_currentPeekZ, targetZ, t);
-        _currentPeekXAngle = Mathf.Lerp(_currentPeekXAngle, targetXAngle, t);
+        _currentTiltX = Mathf.Lerp(_currentTiltX, targetX, t);
+        _currentTiltZ = Mathf.Lerp(_currentTiltZ, targetZ, t);
 
-        float deltaZ = _currentPeekZ - _appliedPeekZ;
-        float deltaXAngle = _currentPeekXAngle - _appliedPeekXAngle;
-
-        Vector3 pos = transform.localPosition;
-        pos.z += deltaZ;
-        transform.localPosition = pos;
-
-        transform.localRotation = transform.localRotation * Quaternion.Euler(deltaXAngle, 0f, 0f);
-
-        _appliedPeekZ = _currentPeekZ;
-        _appliedPeekXAngle = _currentPeekXAngle;
+        transform.localRotation = _baseLocalRotation * Quaternion.Euler(_currentTiltX, 0f, _currentTiltZ);
     }
 }

@@ -2569,7 +2569,7 @@ MonoBehaviour:
   _vignetteVolume: {fileID: 2006315645}
   _blackoutVignetteWeight: 1
   _headBob: {fileID: 8338988565591873056}
-  _normalDuration: 30
+  _normalDuration: 60
   _blackoutDuration: 60
   _resultDuration: 10
   _stages:
@@ -4729,8 +4729,16 @@ PrefabInstance:
       value: 0.2
       objectReference: {fileID: 0}
     - target: {fileID: 6078187074423579678, guid: c5efc39a8aaf6e64ea40e9ad573e9b47, type: 3}
+      propertyPath: _sideTiltZ
+      value: 25
+      objectReference: {fileID: 0}
+    - target: {fileID: 6078187074423579678, guid: c5efc39a8aaf6e64ea40e9ad573e9b47, type: 3}
       propertyPath: _peekRotateX
       value: 20
+      objectReference: {fileID: 0}
+    - target: {fileID: 6078187074423579678, guid: c5efc39a8aaf6e64ea40e9ad573e9b47, type: 3}
+      propertyPath: _forwardTiltX
+      value: 25
       objectReference: {fileID: 0}
     - target: {fileID: 8616685848737228372, guid: c5efc39a8aaf6e64ea40e9ad573e9b47, type: 3}
       propertyPath: m_Name
