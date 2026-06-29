@@ -436,6 +436,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cha_extra_01_ani (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 8111781155169087978, guid: e7a9d45fa96d7cf47a1f20dd86375b84, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 3c9b0ec25ee6b1c44b072e7e57e94012, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -540,6 +544,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cha_extra_01_ani (4)
       objectReference: {fileID: 0}
+    - target: {fileID: 8111781155169087978, guid: e7a9d45fa96d7cf47a1f20dd86375b84, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 3c9b0ec25ee6b1c44b072e7e57e94012, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -1330,6 +1338,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cha_extra_01_ani (3)
       objectReference: {fileID: 0}
+    - target: {fileID: 8111781155169087978, guid: e7a9d45fa96d7cf47a1f20dd86375b84, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 3c9b0ec25ee6b1c44b072e7e57e94012, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -1582,6 +1594,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cha_extra_01_ani (5)
       objectReference: {fileID: 0}
+    - target: {fileID: 8111781155169087978, guid: e7a9d45fa96d7cf47a1f20dd86375b84, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 3c9b0ec25ee6b1c44b072e7e57e94012, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -3452,6 +3468,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cha_extra_01_ani (2)
       objectReference: {fileID: 0}
+    - target: {fileID: 8111781155169087978, guid: e7a9d45fa96d7cf47a1f20dd86375b84, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 3c9b0ec25ee6b1c44b072e7e57e94012, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -3556,6 +3576,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cha_extra_01_ani
       objectReference: {fileID: 0}
+    - target: {fileID: 8111781155169087978, guid: e7a9d45fa96d7cf47a1f20dd86375b84, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 3c9b0ec25ee6b1c44b072e7e57e94012, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
