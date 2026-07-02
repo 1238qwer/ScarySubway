@@ -93,7 +93,7 @@ LightmapSettings:
     m_ExportTrainingData: 0
     m_TrainingDataDestination: TrainingData
     m_LightProbeSampleCountMultiplier: 4
-  m_LightingDataAsset: {fileID: 112000000, guid: 5b374bc3210d1c941980b842da1d59bd, type: 2}
+  m_LightingDataAsset: {fileID: 112000000, guid: 851fad5e1ed2deb4196b75ad887d0c76, type: 2}
   m_LightingSettings: {fileID: 0}
 --- !u!196 &4
 NavMeshSettings:
@@ -6293,7 +6293,7 @@ Transform:
   m_GameObject: {fileID: 1288296291}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: -0.89, y: 0.27, z: 0}
+  m_LocalPosition: {x: -0.89, y: 0.27, z: 0.32}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -7617,48 +7617,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 096af627d457ea641b5691a92a5f263e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LightManager
-  _defaultAreaLigts:
-  - {fileID: 1447702928}
-  - {fileID: 777235227}
-  - {fileID: 1043647029}
-  - {fileID: 537142604}
-  - {fileID: 2144396852}
-  - {fileID: 1396206064}
-  - {fileID: 1262434260}
-  - {fileID: 587707713}
-  - {fileID: 1962241992}
-  - {fileID: 454045709}
-  - {fileID: 555245670}
-  - {fileID: 1347387757}
-  - {fileID: 1098262327}
-  - {fileID: 117946028}
-  - {fileID: 681034027}
-  - {fileID: 1034764551}
-  - {fileID: 1690831567}
-  - {fileID: 2019686138}
-  - {fileID: 914000987}
-  - {fileID: 1814013673}
-  - {fileID: 1993432774}
-  - {fileID: 307990985}
-  - {fileID: 701552107}
-  - {fileID: 1885678381}
-  _eventAreaLigts:
-  - {fileID: 1766433053}
-  - {fileID: 1806458973}
-  - {fileID: 1488673696}
-  - {fileID: 2052546758}
-  - {fileID: 1634441881}
-  - {fileID: 1793993009}
-  - {fileID: 860653772}
-  - {fileID: 123850835}
-  - {fileID: 923820328}
-  - {fileID: 1494789800}
-  - {fileID: 1028415911}
-  - {fileID: 575778270}
-  - {fileID: 924123899}
-  - {fileID: 773758600}
-  - {fileID: 753140992}
-  - {fileID: 1631445325}
+  _defaultAreaLigts: []
+  _eventAreaLigts: []
   _lightPreset: {fileID: 11400000, guid: f761313c7376a5e48995c18968bc882e, type: 2}
   _intensityMultiplier: 20
   CurrentState: 0

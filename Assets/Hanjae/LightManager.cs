@@ -3,7 +3,12 @@ using static UnityEngine.Rendering.DebugUI;
 
 public class LightManager : MonoBehaviour
 {
-    [SerializeField] private Light[] _areaLigts;
+    [SerializeField] private Light[] _defaultAreaLigts;
+    [SerializeField] private Light[] _eventAreaLigts;
+
+    [SerializeField] LightmapData[] dayLightmaps;
+    [SerializeField] LightmapData[] nightLightmaps;
+
     [SerializeField] private Light _directionalLight;
     [SerializeField] private LightPreset _lightPreset;
     [SerializeField] private float _intensityMultiplier = 1f;
@@ -99,7 +104,6 @@ public class LightManager : MonoBehaviour
             _lightPreset.dirLoopCurve.Evaluate(loopTime);
 
         ApplyAreaLightIntensity(area);
-        ApplyDirectionalLight(dir);
     }
 
     void PlayEnd()
@@ -129,7 +133,7 @@ public class LightManager : MonoBehaviour
 
     void ApplyAreaLightColor(LightState state)
     {
-        foreach (var light in _areaLigts)
+        foreach (var light in _defaultAreaLigts)
         {
             if (state == LightState.End)
             {
@@ -146,7 +150,7 @@ public class LightManager : MonoBehaviour
 
     void ApplyAreaLightIntensity(float value)
     {
-        foreach (var light in _areaLigts)
+        foreach (var light in _defaultAreaLigts)
         {
             light.intensity =
                 value * _intensityMultiplier;
