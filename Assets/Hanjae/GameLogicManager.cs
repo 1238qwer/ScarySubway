@@ -59,6 +59,7 @@ public class GameLogicManager : MonoBehaviour
         _eventManager = Object.FindAnyObjectByType<EventManager>();
         _ui_manager = Object.FindAnyObjectByType<UIManager>();
         _directionCameraManager = Object.FindAnyObjectByType<DirectionCameraManager>();
+        _vignetteVolume.gameObject.SetActive(false);
 
         if (_playerCamera == null)
             _playerCamera = Object.FindAnyObjectByType<PlayerCamera>();
@@ -206,6 +207,7 @@ public class GameLogicManager : MonoBehaviour
 
     private void EnterBlackout()
     {
+        _vignetteVolume.gameObject.SetActive(true);
         SetVignetteWeight(_blackoutVignetteWeight);
 
         _headBob?.StartBob();

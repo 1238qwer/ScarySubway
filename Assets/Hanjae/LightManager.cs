@@ -6,8 +6,16 @@ public class LightManager : MonoBehaviour
     [SerializeField] private Light[] _defaultAreaLigts;
     [SerializeField] private Light[] _eventAreaLigts;
 
-    [SerializeField] LightmapData[] dayLightmaps;
-    [SerializeField] LightmapData[] nightLightmaps;
+    [SerializeField] private Texture2D[] _dayLightmapColors;
+    [SerializeField] private Texture2D[] _dayLightmapDirs;
+    [SerializeField] private Texture2D[] _dayShadowMasks;
+
+    [SerializeField] private Texture2D[] _nightLightmapColors;
+    [SerializeField] private Texture2D[] _nightLightmapDirs;
+    [SerializeField] private Texture2D[] _nightShadowMasks;
+
+    [SerializeField] LightmapData[] _dayLightmaps;
+    [SerializeField] LightmapData[] _nightLightmaps;
 
     [SerializeField] private Light _directionalLight;
     [SerializeField] private LightPreset _lightPreset;
@@ -25,6 +33,12 @@ public class LightManager : MonoBehaviour
 
     public LightState CurrentState = LightState.Idle;
 
+    private void Awake()
+    {
+        _dayLightmaps = BuildLightmaps(_dayLightmapColors, _dayLightmapDirs, _dayShadowMasks);
+        _nightLightmaps = BuildLightmaps(_nightLightmapColors, _nightLightmapDirs, _nightShadowMasks);
+    }
+
     void Update()
     {
         switch (CurrentState)
@@ -38,15 +52,41 @@ public class LightManager : MonoBehaviour
                 break;
 
             case LightState.Loop:
+                ApplyNightLightmap();
                 ApplyAreaLightColor(CurrentState);
                 PlayLoop();
                 break;
 
             case LightState.End:
+                ApplyDayLightmap();
                 ApplyAreaLightColor(CurrentState);
                 PlayEnd();
                 break;
         }
+    }
+
+    private LightmapData[] BuildLightmaps(Texture2D[] colors, Texture2D[] dirs, Texture2D[] masks)
+    {
+        if (colors == null || colors.Length == 0)
+            return System.Array.Empty<LightmapData>();
+
+        LightmapData[] result = new LightmapData[colors.Length];
+
+        for (int i = 0; i < colors.Length; i++)
+        {
+            LightmapData data = new LightmapData();
+            data.lightmapColor = colors[i];
+
+            if (dirs != null && i < dirs.Length)
+                data.lightmapDir = dirs[i];
+
+            if (masks != null && i < masks.Length)
+                data.shadowMask = masks[i];
+
+            result[i] = data;
+        }
+
+        return result;
     }
 
     public void StartLights()
@@ -160,5 +200,17 @@ public class LightManager : MonoBehaviour
     void ApplyDirectionalLight(float value)
     {
         _directionalLight.intensity = value;
+    }
+
+    private void ApplyDayLightmap()
+    {
+        if (_dayLightmaps != null && _dayLightmaps.Length > 0)
+            LightmapSettings.lightmaps = _dayLightmaps;
+    }
+
+    private void ApplyNightLightmap()
+    {
+        if (_nightLightmaps != null && _nightLightmaps.Length > 0)
+            LightmapSettings.lightmaps = _nightLightmaps;
     }
 }

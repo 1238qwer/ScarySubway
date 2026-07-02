@@ -136,7 +136,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &17803269
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -177,7 +177,7 @@ Light:
   serializedVersion: 12
   m_Type: 2
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Intensity: 3
+  m_Intensity: 0
   m_Range: 5
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -450,7 +450,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &108472366
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -491,7 +491,7 @@ Light:
   serializedVersion: 12
   m_Type: 2
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Intensity: 3
+  m_Intensity: 0
   m_Range: 5
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -7618,30 +7618,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LightManager
   _defaultAreaLigts:
-  - {fileID: 1447702928}
-  - {fileID: 777235227}
-  - {fileID: 1043647029}
-  - {fileID: 537142604}
-  - {fileID: 2144396852}
-  - {fileID: 1396206064}
-  - {fileID: 1262434260}
-  - {fileID: 587707713}
-  - {fileID: 1962241992}
-  - {fileID: 454045709}
-  - {fileID: 555245670}
-  - {fileID: 1347387757}
-  - {fileID: 1098262327}
-  - {fileID: 117946028}
-  - {fileID: 681034027}
-  - {fileID: 1034764551}
-  - {fileID: 1690831567}
-  - {fileID: 2019686138}
-  - {fileID: 914000987}
-  - {fileID: 1814013673}
-  - {fileID: 1993432774}
-  - {fileID: 307990985}
-  - {fileID: 701552107}
-  - {fileID: 1885678381}
+  - {fileID: 108472367}
+  - {fileID: 2027011784}
+  - {fileID: 17803270}
   _eventAreaLigts:
   - {fileID: 1766433053}
   - {fileID: 1806458973}
@@ -7659,8 +7638,23 @@ MonoBehaviour:
   - {fileID: 773758600}
   - {fileID: 753140992}
   - {fileID: 1631445325}
+  _dayLightmapColors:
+  - {fileID: 2800000, guid: 4222873f7e283f4409e16504671aba15, type: 3}
+  - {fileID: 2800000, guid: 04e4c5a5ef6d36b41b3126c117b11974, type: 3}
+  _dayLightmapDirs:
+  - {fileID: 2800000, guid: 32de05d6278202249bbb4b6754b72226, type: 3}
+  - {fileID: 2800000, guid: 3b66850d6d894434fa2aa13675f30dc4, type: 3}
+  _dayShadowMasks: []
+  _nightLightmapColors:
+  - {fileID: 2800000, guid: 17413e7712ac2b946a2397145cad78c1, type: 3}
+  - {fileID: 2800000, guid: aab9125f44475134dbc69b07e55eb22c, type: 3}
+  _nightLightmapDirs:
+  - {fileID: 2800000, guid: f006af8a549866d4bbf162bf333358d7, type: 3}
+  - {fileID: 2800000, guid: 41f86d89d4c031741a89a03e04dd519a, type: 3}
+  _nightShadowMasks: []
+  _directionalLight: {fileID: 2005240341}
   _lightPreset: {fileID: 11400000, guid: f761313c7376a5e48995c18968bc882e, type: 2}
-  _intensityMultiplier: 20
+  _intensityMultiplier: 0
   CurrentState: 0
 --- !u!4 &1562884797
 Transform:
@@ -9921,7 +9915,7 @@ Light:
   serializedVersion: 12
   m_Type: 1
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Intensity: 4
+  m_Intensity: 1
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -10035,7 +10029,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &2006315645
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10052,7 +10046,7 @@ MonoBehaviour:
   priority: 0
   blendDistance: 0
   weight: 1
-  sharedProfile: {fileID: 11400000, guid: f2c2fd3fd9672f74fb4d9f1412cdb67e, type: 2}
+  sharedProfile: {fileID: 11400000, guid: d76ba2f619d8d5e49bf5706237d451c3, type: 2}
 --- !u!4 &2006315646
 Transform:
   m_ObjectHideFlags: 0
@@ -10341,7 +10335,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &2027011783
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10382,7 +10376,7 @@ Light:
   serializedVersion: 12
   m_Type: 2
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Intensity: 3
+  m_Intensity: 0
   m_Range: 5
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
