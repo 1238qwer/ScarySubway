@@ -25,7 +25,7 @@ public class GameLogicManager : MonoBehaviour
     [SerializeField] private float _blackoutEndBuffer = 5f;
 
     private SoundManager _soundManager;
-    private EventManager _eventManager;
+    private AnomalyManager _eventManager;
     private LightManager _lightManager;
     private UIManager _ui_manager;
     private DirectionCameraManager _directionCameraManager;
@@ -56,7 +56,7 @@ public class GameLogicManager : MonoBehaviour
     {
         _lightManager = Object.FindAnyObjectByType<LightManager>();
         _soundManager = Object.FindAnyObjectByType<SoundManager>();
-        _eventManager = Object.FindAnyObjectByType<EventManager>();
+        _eventManager = Object.FindAnyObjectByType<AnomalyManager>();
         _ui_manager = Object.FindAnyObjectByType<UIManager>();
         _directionCameraManager = Object.FindAnyObjectByType<DirectionCameraManager>();
         _vignetteVolume.gameObject.SetActive(false);

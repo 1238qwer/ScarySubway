@@ -11380,6 +11380,10 @@ PrefabInstance:
       value: 2147483647
       objectReference: {fileID: 0}
     - target: {fileID: 9009312850710372132, guid: ca7bed87a6c69b34bb768e4001495145, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9009312850710372132, guid: ca7bed87a6c69b34bb768e4001495145, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 2147483647
       objectReference: {fileID: 0}
