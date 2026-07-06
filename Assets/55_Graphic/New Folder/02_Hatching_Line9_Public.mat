@@ -20,7 +20,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: 02_Hatching_chair
+  m_Name: 02_Hatching_Line9_Public
   m_Shader: {fileID: 4800000, guid: aef19de831fba0648a6eb5c4487ea286, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
@@ -39,7 +39,7 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _BaseMap:
-        m_Texture: {fileID: 2800000, guid: 78bee9f5dd2aea045b75b8814c9d6e03, type: 3}
+        m_Texture: {fileID: 2800000, guid: a268c68c7635baa45acca641e2eaf8f1, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BumpMap:
@@ -120,7 +120,7 @@ Material:
     - _CastShadowsNoise1Size: 1
     - _CastShadowsNoise2Seed: 1
     - _CastShadowsNoiseIntensity: 0
-    - _CastShadowsNumberOfCellsHatching: 2
+    - _CastShadowsNumberOfCellsHatching: 1
     - _CastShadowsOpacityRandomIntensity: 0
     - _CastShadowsOpacityRandomMode: 0
     - _CastShadowsPolarCenterMode: 0
@@ -170,11 +170,11 @@ Material:
     - _LengthRandomMode: 0
     - _LightFunction: 1
     - _LightSource: 0
-    - _Metallic: 0.108
+    - _Metallic: 0
     - _NoiseIntensity: 0
     - _NoiseTextureQuality: 0
     - _NumberOfCells: 3
-    - _NumberOfCellsHatching: 2
+    - _NumberOfCellsHatching: 1
     - _OcclusionStrength: 1
     - _OpacityRandomIntensity: 0
     - _OpacityRandomMode: 0
@@ -222,7 +222,7 @@ Material:
     - _ShadingNoise2Seed: 1
     - _ShadingStyle: 0
     - _ShadingUseLightColors: 1
-    - _Smoothness: 0.5
+    - _Smoothness: 0.642
     - _SmoothnessSource: 0
     - _SmoothnessTextureChannel: 0
     - _SpacingRandomIntensity: 0
@@ -256,8 +256,8 @@ Material:
     - _SpecularUVSet: 0
     - _SpecularUseLightColors: 1
     - _StylingAdjustDistanceFadeValue: 0
-    - _StylingCastShadowsBlending: 6
-    - _StylingCastShadowsDashesDensity: 19.01
+    - _StylingCastShadowsBlending: 0
+    - _StylingCastShadowsDashesDensity: 92.5
     - _StylingCastShadowsDashesOffset: 0
     - _StylingCastShadowsDashesRoundness: 1
     - _StylingCastShadowsDashesSize: 0.5
@@ -265,7 +265,7 @@ Material:
     - _StylingCastShadowsDashesTransitionSoftness: 0
     - _StylingCastShadowsDashesType: 0
     - _StylingCastShadowsDashesUseHatchingDensity: 1
-    - _StylingCastShadowsDensity: 19.01
+    - _StylingCastShadowsDensity: 92.5
     - _StylingCastShadowsEnableDashes: 1
     - _StylingCastShadowsHalftonesOffset: 1
     - _StylingCastShadowsHalftonesRoundness: 1
@@ -284,7 +284,7 @@ Material:
     - _StylingDFFalloff: 0
     - _StylingDFStartingDistance: 0
     - _StylingDistanceFadeValue: 0
-    - _StylingOvermodelingFactor: 0
+    - _StylingOvermodelingFactor: 0.404
     - _StylingRimAffectedArea: 2
     - _StylingRimBlending: 0
     - _StylingRimDashesDensity: 30
@@ -311,8 +311,8 @@ Material:
     - _StylingRimThickness: 0.8
     - _StylingRimThicknessControl: 0
     - _StylingRimThicknessFalloff: 0.1
-    - _StylingShadingBlending: 6
-    - _StylingShadingDashesDensity: 19.01
+    - _StylingShadingBlending: 0
+    - _StylingShadingDashesDensity: 92.5
     - _StylingShadingDashesOffset: 0
     - _StylingShadingDashesRoundness: 1
     - _StylingShadingDashesSize: 0.5
@@ -320,7 +320,7 @@ Material:
     - _StylingShadingDashesTransitionSoftness: 0
     - _StylingShadingDashesType: 0
     - _StylingShadingDashesUseHatchingDensity: 1
-    - _StylingShadingDensity: 19.01
+    - _StylingShadingDensity: 92.5
     - _StylingShadingEnableDashes: 1
     - _StylingShadingHalftonesOffset: 1
     - _StylingShadingHalftonesRoundness: 1
