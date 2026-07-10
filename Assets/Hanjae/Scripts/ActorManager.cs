@@ -1,93 +1,104 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ActorManager : MonoBehaviour
+public class ActorManager : AnomalyBehaviour
 {
+    private enum ActorAnomalyType
+    {
+        Random,
+        NeckRotate,
+        JumpSquare
+    }
+
     [SerializeField] private GameObject[] _actorPrefabs;
     [SerializeField] private Transform[] _actorTransforms;
     [SerializeField] private Material[] _actorHeadMats;
     [SerializeField] private Material[] _actorBodyMats;
     [SerializeField] private Transform _jumpSquarePos;
+    [SerializeField] private ActorAnomalyType _anomalyType = ActorAnomalyType.Random;
 
     private Actor[] _actors;
-    private readonly HashSet<Actor> _blackoutEventActors = new HashSet<Actor>();
+    private readonly HashSet<Actor> _anomalyActors = new HashSet<Actor>();
 
-    void Start()
+    private void Start()
     {
-        SpawnActors();
     }
 
-    void SpawnActors()
+    public void RespawnActorsOnHalfPositions()
     {
-        //List<(Material head, Material body)> combinations =
-        //    new List<(Material, Material)>();
+        ClearAnomalyActors();
+        DestroyAllActors();
+        SpawnActorsOnHalfPositions();
+    }
 
-        //foreach (var head in _actorHeadMats)
-        //{
-        //    foreach (var body in _actorBodyMats)
-        //    {
-        //        combinations.Add((head, body));
-        //    }
-        //}
+    private void DestroyAllActors()
+    {
+        if (_actors == null)
+            return;
 
-        //for (int i = 0; i < combinations.Count; i++)
-        //{
-        //    int rand = Random.Range(i, combinations.Count);
-        //    (combinations[i], combinations[rand]) =
-        //    (combinations[rand], combinations[i]);
-        //}
-
-        _actors = new Actor[_actorTransforms.Length];
-
-        for (int i = 0; i < _actorTransforms.Length; i++)
+        for (int i = 0; i < _actors.Length; i++)
         {
-            GameObject obj =
+            if (_actors[i] != null)
+                Destroy(_actors[i].gameObject);
+        }
+
+        _actors = null;
+    }
+
+    private void SpawnActorsOnHalfPositions()
+    {
+        if (_actorPrefabs == null || _actorPrefabs.Length == 0 || _actorTransforms == null || _actorTransforms.Length == 0)
+        {
+            _actors = new Actor[0];
+            return;
+        }
+
+        int spawnCount = _actorTransforms.Length / 2;
+        if (spawnCount <= 0)
+        {
+            _actors = new Actor[0];
+            return;
+        }
+
+        List<int> indices = new List<int>(_actorTransforms.Length);
+        for (int i = 0; i < _actorTransforms.Length; i++)
+            indices.Add(i);
+
+        for (int i = indices.Count - 1; i > 0; i--)
+        {
+            int swapIndex = Random.Range(0, i + 1);
+            int temp = indices[i];
+            indices[i] = indices[swapIndex];
+            indices[swapIndex] = temp;
+        }
+
+        _actors = new Actor[spawnCount];
+
+        for (int i = 0; i < spawnCount; i++)
+        {
+            Transform spawnPoint = _actorTransforms[indices[i]];
+            if (spawnPoint == null)
+                continue;
+
+            GameObject actorObject =
                 Instantiate(
                     _actorPrefabs[Random.Range(0, _actorPrefabs.Length)],
-                    _actorTransforms[i].position,
-                    _actorTransforms[i].rotation,
+                    spawnPoint.position,
+                    spawnPoint.rotation,
                     transform);
 
-            Actor actor = obj.GetComponent<Actor>();
-            _actors[i] = actor;
-
-            //if (i < combinations.Count)
-            //{
-            //    actor.SetMaterials(
-            //        combinations[i].head,
-            //        combinations[i].body);
-            //}
+            _actors[i] = actorObject.GetComponent<Actor>();
         }
     }
 
-    public void ClearBlackoutEventActors()
+    public void ClearAnomalyActors()
     {
-        _blackoutEventActors.Clear();
+        _anomalyActors.Clear();
     }
 
-    public bool WasBlackoutEventActor(Actor actor)
+    public bool IsAnomalyActor(Actor actor)
     {
-        return actor != null && _blackoutEventActors.Contains(actor);
-    }
-
-    public void ActorNeckRotateToPlayer()
-    {
-        Actor actor = GetRandomUnselectedActor();
-        if (actor == null)
-            return;
-
-        _blackoutEventActors.Add(actor);
-        actor.NeckRotateToPlayer();
-    }
-
-    public void ActorJumpSquare()
-    {
-        Actor actor = GetRandomUnselectedActor();
-        if (actor == null)
-            return;
-
-        _blackoutEventActors.Add(actor);
-        actor.JumpSquare(_jumpSquarePos);
+        return actor != null && _anomalyActors.Contains(actor);
     }
 
     public int GetActorCount()
@@ -95,7 +106,36 @@ public class ActorManager : MonoBehaviour
         return _actors != null ? _actors.Length : 0;
     }
 
-    private Actor GetRandomUnselectedActor()
+    public override void Activate()
+    {
+        Actor target = GetRandomActorWithoutAnomaly();
+        if (target == null)
+            return;
+
+        _anomalyActors.Clear();
+        _anomalyActors.Add(target);
+
+        ActorAnomalyType typeToRun = _anomalyType;
+        if (typeToRun == ActorAnomalyType.Random)
+            typeToRun = Random.value < 0.5f ? ActorAnomalyType.NeckRotate : ActorAnomalyType.JumpSquare;
+
+        if (typeToRun == ActorAnomalyType.NeckRotate)
+            target.NeckRotateToPlayer();
+        else
+            target.JumpSquare(_jumpSquarePos);
+    }
+
+    public override void Deactivate()
+    {
+        _anomalyActors.Clear();
+    }
+
+    public override bool TryResolveWithActor(Actor actor)
+    {
+        return IsAnomalyActor(actor);
+    }
+
+    private Actor GetRandomActorWithoutAnomaly()
     {
         if (_actors == null || _actors.Length == 0)
             return null;
@@ -104,7 +144,7 @@ public class ActorManager : MonoBehaviour
         for (int i = 0; i < _actors.Length; i++)
         {
             Actor actor = _actors[i];
-            if (actor != null && !_blackoutEventActors.Contains(actor))
+            if (actor != null && !_anomalyActors.Contains(actor))
                 candidates.Add(actor);
         }
 

@@ -9,45 +9,38 @@ public class GameLogicManager : MonoBehaviour
     private class StageConfig
     {
         public int Stage = 0;
-        [Min(0)] public int BlackoutEventCount = 3;
+        [Range(0f, 1f)] public float AnomalyChance = 0.5f;
     }
 
     [SerializeField] private Volume _vignetteVolume;
     [SerializeField, Range(0f, 1f)] private float _blackoutVignetteWeight = 1f;
     [SerializeField] private HeadBob _headBob;
     [SerializeField] private float _normalDuration = 10f;
-    [SerializeField] private float _blackoutDuration = 20f;
-    [SerializeField] private float _resultDuration = 10f;
+    [SerializeField] private float _resolveDuration = 10f;
+    [SerializeField] private float _resolveStartDelay = 3f;
     [SerializeField] private StageConfig[] _stages;
     [SerializeField] private int _currentStageIndex;
-    [SerializeField] private PlayerCamera _playerCamera;
-    [SerializeField] private float _blackoutStartBuffer = 5f;
-    [SerializeField] private float _blackoutEndBuffer = 5f;
 
     private SoundManager _soundManager;
-    private AnomalyManager _eventManager;
+    private AnomalyManager _anomalyManager;
     private LightManager _lightManager;
-    private UIManager _ui_manager;
+    private UIManager _uiManager;
     private DirectionCameraManager _directionCameraManager;
 
-    private float _stateTimer;
-    private float _resultTimer;
-    private bool _resultTimeoutHandled;
-    private bool _nextStageLogged;
+    private float _stateElapsedTime;
+    private float _resolveElapsedTime;
+
     private bool _isGameCleared;
-    private bool _isInputLocked; // 입력 잠금 상태 추가
-
-    private int _blackoutEventsTriggered;
-    private int _blackoutEventCountForCurrentStage;
-    private float _nextBlackoutEventTime;
-
-    private readonly HashSet<Actor> _resolvedActorsInResult = new HashSet<Actor>();
+    private bool _isInputLocked;
+    private bool _isResolvePhaseActive;
+    private bool _hasAnomalyThisStage;
+    private bool _isResolveFinished;
+    private bool _isStageTransitionHandled;
 
     public enum GameState
     {
         Normal,
-        Blackout,
-        Result
+        Blackout
     }
 
     public GameState CurrentState = GameState.Normal;
@@ -56,13 +49,12 @@ public class GameLogicManager : MonoBehaviour
     {
         _lightManager = Object.FindAnyObjectByType<LightManager>();
         _soundManager = Object.FindAnyObjectByType<SoundManager>();
-        _eventManager = Object.FindAnyObjectByType<AnomalyManager>();
-        _ui_manager = Object.FindAnyObjectByType<UIManager>();
+        _anomalyManager = Object.FindAnyObjectByType<AnomalyManager>();
+        _uiManager = Object.FindAnyObjectByType<UIManager>();
         _directionCameraManager = Object.FindAnyObjectByType<DirectionCameraManager>();
-        _vignetteVolume.gameObject.SetActive(false);
 
-        if (_playerCamera == null)
-            _playerCamera = Object.FindAnyObjectByType<PlayerCamera>();
+        if (_vignetteVolume != null)
+            _vignetteVolume.gameObject.SetActive(false);
     }
 
     private void Start()
@@ -70,7 +62,7 @@ public class GameLogicManager : MonoBehaviour
         ClampStageIndex();
         SetVignetteWeight(0f);
         _directionCameraManager?.StartDirectionCamera();
-        ResetAllRuntimeFlags();
+        ResetRuntimeFlags();
         EnterState(CurrentState);
     }
 
@@ -95,30 +87,32 @@ public class GameLogicManager : MonoBehaviour
             ChangeState(GameState.Normal);
 
         if (Keyboard.current.digit3Key.wasPressedThisFrame)
-            _eventManager?.ActorNeckRotateToPlayer();
+            _anomalyManager?.TriggerRandomAnomaly();
 
-        if (CurrentState != GameState.Result || _ui_manager == null || !_ui_manager.HasAnyEnabledEyes())
+        if (CurrentState != GameState.Blackout || !_isResolvePhaseActive)
             return;
 
-        if (_playerCamera == null || _eventManager == null)
+        if (_isResolveFinished || _isStageTransitionHandled)
             return;
 
-        if (!Mouse.current.leftButton.wasPressedThisFrame)
-            return;
-
-        if (!_playerCamera.TryGetLookedActor(out Actor lookedActor))
-            return;
-
-        if (!_eventManager.WasBlackoutEventActor(lookedActor))
-            return;
-
-        if (_resolvedActorsInResult.Contains(lookedActor))
-            return;
-
-        if (_ui_manager.DisableFirstEnabledEye())
+        // 우클릭: "이상현상 없음" 선택
+        if (Mouse.current != null && Mouse.current.rightButton.wasPressedThisFrame)
         {
-            _resolvedActorsInResult.Add(lookedActor);
-            TryHandleAllEyesDisabledInResult();
+            if (_hasAnomalyThisStage)
+                HandleStageFailure();
+            else
+                HandleStageSuccess();
+
+            return;
+        }
+
+        // 좌클릭: "이상현상 있음" 선택
+        if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
+        {
+            if (_hasAnomalyThisStage)
+                HandleStageSuccess();
+            else
+                HandleStageFailure();
         }
     }
 
@@ -129,7 +123,7 @@ public class GameLogicManager : MonoBehaviour
 
         ExitState(CurrentState);
         CurrentState = nextState;
-        _stateTimer = 0f;
+        _stateElapsedTime = 0f;
         EnterState(CurrentState);
     }
 
@@ -142,9 +136,6 @@ public class GameLogicManager : MonoBehaviour
                 break;
             case GameState.Blackout:
                 EnterBlackout();
-                break;
-            case GameState.Result:
-                EnterResult();
                 break;
         }
     }
@@ -159,9 +150,6 @@ public class GameLogicManager : MonoBehaviour
             case GameState.Blackout:
                 UpdateBlackout();
                 break;
-            case GameState.Result:
-                UpdateResult();
-                break;
         }
     }
 
@@ -170,13 +158,10 @@ public class GameLogicManager : MonoBehaviour
         switch (state)
         {
             case GameState.Normal:
-                ExitNormal();
+                Debug.Log("Normal 상태 종료");
                 break;
             case GameState.Blackout:
-                ExitBlackout();
-                break;
-            case GameState.Result:
-                ExitResult();
+                Debug.Log("Blackout 상태 종료");
                 break;
         }
     }
@@ -188,172 +173,118 @@ public class GameLogicManager : MonoBehaviour
         _headBob?.StopBob();
         _lightManager?.StopLights();
         _soundManager?.NormalAmbient();
-        _ui_manager?.ResetEyes();
-        _ui_manager?.SetResultUIActive(false);
-        _eventManager?.ClearBlackoutEventActors();
+
+        _uiManager?.SetResultUIActive(false);
+        _anomalyManager?.RespawnActorsOnHalfPositions();
+
+        _resolveElapsedTime = 0f;
+        _isResolveFinished = false;
+        _isStageTransitionHandled = false;
+        _isResolvePhaseActive = false;
+        _hasAnomalyThisStage = false;
     }
 
     private void UpdateNormal()
     {
-        _stateTimer += Time.deltaTime;
-        if (_stateTimer >= _normalDuration)
+        _stateElapsedTime += Time.deltaTime;
+        if (_stateElapsedTime >= _normalDuration)
             ChangeState(GameState.Blackout);
-    }
-
-    private void ExitNormal()
-    {
-        Debug.Log("Normal 상태 종료");
     }
 
     private void EnterBlackout()
     {
-        _vignetteVolume.gameObject.SetActive(true);
+        if (_vignetteVolume != null)
+            _vignetteVolume.gameObject.SetActive(true);
+
         SetVignetteWeight(_blackoutVignetteWeight);
 
         _headBob?.StartBob();
         _lightManager?.StartLights();
         _soundManager?.PlayAnnouncement();
         _soundManager?.DistortionAmbient();
-        _ui_manager?.SetResultUIActive(false);
 
-        _eventManager?.ClearBlackoutEventActors();
+        _anomalyManager?.ClearStage();
 
-        _blackoutEventsTriggered = 0;
+        _resolveElapsedTime = 0f;
+        _isResolveFinished = false;
+        _isStageTransitionHandled = false;
+        _isResolvePhaseActive = false;
 
-        int stageEventCount = GetCurrentStageBlackoutEventCount();
-        int actorCount = _eventManager != null ? _eventManager.GetActorCount() : 0;
-        _blackoutEventCountForCurrentStage = Mathf.Min(stageEventCount, actorCount);
-
-        _ui_manager?.EnsureEyeIconCapacity(_blackoutEventCountForCurrentStage);
-
-        float step = GetBlackoutEventStep();
-        _nextBlackoutEventTime = (_blackoutEventCountForCurrentStage > 0 && step != float.MaxValue)
-            ? GetFirstBlackoutEventTime()
-            : float.MaxValue;
+        _hasAnomalyThisStage = RollAnomalyForCurrentStage();
+        _uiManager?.SetResultUIActive(false);
     }
 
     private void UpdateBlackout()
     {
-        _stateTimer += Time.deltaTime;
+        _stateElapsedTime += Time.deltaTime;
 
-        if (_stateTimer >= _blackoutDuration)
+        if (!_isResolvePhaseActive)
         {
-            ChangeState(GameState.Result);
-            return;
-        }
-
-        if (_blackoutEventsTriggered >= _blackoutEventCountForCurrentStage)
-            return;
-
-        float step = GetBlackoutEventStep();
-        while (_blackoutEventsTriggered < _blackoutEventCountForCurrentStage && _stateTimer >= _nextBlackoutEventTime)
-        {
-            TriggerBlackoutEvent();
-            _blackoutEventsTriggered++;
-            _nextBlackoutEventTime += step;
-
-            if (CurrentState != GameState.Blackout)
+            if (_stateElapsedTime < _resolveStartDelay)
                 return;
+
+            _isResolvePhaseActive = true;
+            _resolveElapsedTime = 0f;
+
+            _uiManager?.SetResultUIActive(true);
+            _uiManager?.SetResultSliderByTime(_resolveDuration, _resolveDuration);
+
+            if (_hasAnomalyThisStage)
+                TriggerAnomaly();
         }
-    }
 
-    private void TriggerBlackoutEvent()
-    {
-        if (_eventManager == null)
+        if (_isResolveFinished)
             return;
 
-        //int randInt = Random.Range(0, 3);
-        //if (randInt == 0)
-        //{
-        //    _eventManager.ActorJumpSquare();
-        //    _soundManager?.PlayJumpsquareSound();
-        //}
-        //else
-        //{
-            _eventManager.ActorNeckRotateToPlayer();
-        //}
+        _resolveElapsedTime += Time.deltaTime;
 
-        _ui_manager?.EnableNextEyeIcon();
-    }
+        float remainingTime = Mathf.Max(0f, _resolveDuration - _resolveElapsedTime);
+        _uiManager?.SetResultSliderByTime(remainingTime, _resolveDuration);
 
-    private void ExitBlackout()
-    {
-        Debug.Log("Blackout 상태 종료");
-    }
-
-    private void EnterResult()
-    {
-        SetVignetteWeight(0f);
-
-        _headBob?.StopBob();
-        _lightManager?.StopLights();
-        _soundManager?.NormalAmbient();
-        _resultTimer = 0f;
-        _resultTimeoutHandled = false;
-        _nextStageLogged = false;
-        _resolvedActorsInResult.Clear();
-
-        _ui_manager?.SetResultUIActive(true);
-        _ui_manager?.SetResultSliderByTime(_resultDuration, _resultDuration);
-    }
-
-    private void UpdateResult()
-    {
-        if (_resultTimeoutHandled)
+        if (_resolveElapsedTime < _resolveDuration)
             return;
 
-        if (_ui_manager != null && _ui_manager.AreAllEyesDisabled())
-            return;
-
-        _resultTimer += Time.deltaTime;
-
-        float remainingTime = Mathf.Max(0f, _resultDuration - _resultTimer);
-        _ui_manager?.SetResultSliderByTime(remainingTime, _resultDuration);
-
-        if (_resultTimer >= _resultDuration)
-            HandleResultTimeout();
+        if (_hasAnomalyThisStage)
+            HandleStageFailure();
+        else
+            HandleStageSuccess();
     }
 
-    private void ExitResult()
+    private void TriggerAnomaly()
     {
-        Debug.Log("Result 상태 종료");
+        bool triggered = _anomalyManager != null && _anomalyManager.TriggerRandomAnomaly();
+
+        if (!triggered)
+            _hasAnomalyThisStage = false;
     }
 
-    private void HandleResultTimeout()
+    private void HandleStageFailure()
     {
-        _resultTimeoutHandled = true;
+        _isResolveFinished = true;
         _isInputLocked = true;
-
-        if (_ui_manager != null)
-            _ui_manager.StartFade("GO TO FIRST STATION..", ResetToFirstState);
-
-        Debug.Log("Result 타임아웃: 첫 상태로 복귀");
+        _uiManager?.StartFade("GO TO FIRST STATION..", ResetToFirstStage);
+        Debug.Log("해결 실패: 첫 스테이지로 복귀");
     }
 
-    private void TryHandleAllEyesDisabledInResult()
+    private void HandleStageSuccess()
     {
-        if (_nextStageLogged)
+        if (_isStageTransitionHandled)
             return;
 
-        if (_ui_manager == null || !_ui_manager.AreAllEyesDisabled())
-            return;
-
-        _nextStageLogged = true;
-        _resultTimeoutHandled = true;
+        _isStageTransitionHandled = true;
+        _isResolveFinished = true;
+        _isInputLocked = true;
 
         if (IsLastStage())
         {
-            _ui_manager.StartFade("CLEAR", () => { });
+            _uiManager?.StartFade("CLEAR", () => { });
             _isGameCleared = true;
             Debug.Log("게임 클리어!");
             return;
         }
-        else
-        {
-            _ui_manager.StartFade("GO TO NEXT STATION...", MoveToNextStage);
-        }
 
-        Debug.Log("다음스테이지로");
+        _uiManager?.StartFade("GO TO NEXT STATION...", MoveToNextStage);
+        Debug.Log("다음 스테이지로 이동");
     }
 
     private void MoveToNextStage()
@@ -361,78 +292,37 @@ public class GameLogicManager : MonoBehaviour
         _isInputLocked = false;
         _currentStageIndex++;
         ChangeState(GameState.Normal);
-        _resultTimer = 0f;
-        _resultTimeoutHandled = false;
     }
 
-    private void ResetToFirstState()
+    private void ResetToFirstStage()
     {
         _isInputLocked = false;
         _currentStageIndex = 0;
         _isGameCleared = false;
-        _ui_manager?.ResetEyes();
-        _resultTimer = 0f;
-        _resultTimeoutHandled = false;
-        _nextStageLogged = false;
         _directionCameraManager?.StartDirectionCamera();
         ChangeState(GameState.Normal);
     }
 
-    private void ResetAllRuntimeFlags()
+    private void ResetRuntimeFlags()
     {
-        _stateTimer = 0f;
-        _resultTimer = 0f;
-        _resultTimeoutHandled = false;
-        _nextStageLogged = false;
+        _stateElapsedTime = 0f;
+        _resolveElapsedTime = 0f;
+        _isResolveFinished = false;
+        _isStageTransitionHandled = false;
         _isGameCleared = false;
         _isInputLocked = false;
-        _blackoutEventsTriggered = 0;
-        _blackoutEventCountForCurrentStage = 0;
-        _nextBlackoutEventTime = float.MaxValue;
+        _isResolvePhaseActive = false;
+        _hasAnomalyThisStage = false;
     }
 
-    private int GetCurrentStageBlackoutEventCount()
+    private bool RollAnomalyForCurrentStage()
     {
         if (_stages == null || _stages.Length == 0)
-            return 0;
+            return false;
 
         int index = Mathf.Clamp(_currentStageIndex, 0, _stages.Length - 1);
-        return Mathf.Max(0, _stages[index].BlackoutEventCount);
-    }
-
-    private float GetFirstBlackoutEventTime()
-    {
-        if (_blackoutEventCountForCurrentStage <= 0)
-            return float.MaxValue;
-
-        float safeDuration = Mathf.Max(0.01f, _blackoutDuration);
-        float startBuffer = Mathf.Clamp(_blackoutStartBuffer, 0f, safeDuration);
-        float endBuffer = Mathf.Clamp(_blackoutEndBuffer, 0f, safeDuration - startBuffer);
-        float usableDuration = safeDuration - startBuffer - endBuffer;
-
-        if (usableDuration <= 0f)
-            return float.MaxValue;
-
-        if (_blackoutEventCountForCurrentStage == 1)
-            return startBuffer + (usableDuration * 0.5f);
-
-        return startBuffer;
-    }
-
-    private float GetBlackoutEventStep()
-    {
-        if (_blackoutEventCountForCurrentStage <= 0)
-            return float.MaxValue;
-
-        float safeDuration = Mathf.Max(0.01f, _blackoutDuration);
-        float startBuffer = Mathf.Clamp(_blackoutStartBuffer, 0f, safeDuration);
-        float endBuffer = Mathf.Clamp(_blackoutEndBuffer, 0f, safeDuration - startBuffer);
-        float usableDuration = safeDuration - startBuffer - endBuffer;
-
-        if (usableDuration <= 0f)
-            return float.MaxValue;
-
-        return usableDuration / _blackoutEventCountForCurrentStage;
+        float chance = Mathf.Clamp01(_stages[index].AnomalyChance);
+        return Random.value <= chance;
     }
 
     private bool IsLastStage()

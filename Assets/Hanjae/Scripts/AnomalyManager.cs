@@ -5,73 +5,87 @@ public class AnomalyManager : MonoBehaviour
 {
     public static AnomalyManager Instance;
 
-    private List<AnomalyBehaviour> anomalies =
-        new List<AnomalyBehaviour>();
+    [SerializeField] private AnomalyData[] _anomalyPool;
 
-    private List<AnomalyBehaviour> activated =
-        new List<AnomalyBehaviour>();
+    private readonly List<AnomalyBehaviour> _registeredAnomalies = new List<AnomalyBehaviour>();
+    private readonly List<AnomalyBehaviour> _activeAnomalies = new List<AnomalyBehaviour>();
 
-    private ActorManager _actorAnomalyManager;
-
-    void Start()
+    private void Awake()
     {
         Instance = this;
-        _actorAnomalyManager = Object.FindAnyObjectByType<ActorManager>();
     }
 
     public void Register(AnomalyBehaviour anomaly)
     {
-        anomalies.Add(anomaly);
+        if (anomaly == null || _registeredAnomalies.Contains(anomaly))
+            return;
+
+        _registeredAnomalies.Add(anomaly);
     }
 
-    void Update()
+    public void Unregister(AnomalyBehaviour anomaly)
     {
-    }
-
-    public void StartStage(AnomalyData data)
-    {
-        ClearStage();
-
-        foreach (var anomaly in anomalies)
-        {
-            if (anomaly.ID == data.anomalyID)
-            {
-                anomaly.Activate();
-                activated.Add(anomaly);
-            }
-        }
+        _registeredAnomalies.Remove(anomaly);
+        _activeAnomalies.Remove(anomaly);
     }
 
     public void ClearStage()
     {
-        foreach (var anomaly in activated)
-            anomaly.Deactivate();
+        for (int i = 0; i < _activeAnomalies.Count; i++)
+            _activeAnomalies[i].Deactivate();
 
-        activated.Clear();
+        _activeAnomalies.Clear();
     }
 
-    public void ActorNeckRotateToPlayer()
+    public bool TriggerRandomAnomaly()
     {
-        _actorAnomalyManager?.ActorNeckRotateToPlayer();
+        if (_anomalyPool == null || _anomalyPool.Length == 0)
+            return false;
+
+        AnomalyData picked = _anomalyPool[Random.Range(0, _anomalyPool.Length)];
+        if (picked == null || string.IsNullOrWhiteSpace(picked.AnomalyID))
+            return false;
+
+        return TriggerAnomalyById(picked.AnomalyID);
     }
 
-    public void ActorJumpSquare()
+    public bool TriggerAnomalyById(string anomalyID)
     {
-        _actorAnomalyManager?.ActorJumpSquare();
+        if (string.IsNullOrWhiteSpace(anomalyID))
+            return false;
+
+        ClearStage();
+
+        bool triggered = false;
+
+        for (int i = 0; i < _registeredAnomalies.Count; i++)
+        {
+            AnomalyBehaviour anomaly = _registeredAnomalies[i];
+            if (anomaly == null || anomaly.ID != anomalyID)
+                continue;
+
+            anomaly.Activate();
+            _activeAnomalies.Add(anomaly);
+            triggered = true;
+        }
+
+        return triggered;
     }
 
-    public void ClearBlackoutEventActors()
+    public bool TryResolveWithActor(Actor lookedActor)
     {
-        _actorAnomalyManager?.ClearBlackoutEventActors();
+        for (int i = 0; i < _activeAnomalies.Count; i++)
+        {
+            if (_activeAnomalies[i].TryResolveWithActor(lookedActor))
+                return true;
+        }
+
+        return false;
     }
 
-    public bool WasBlackoutEventActor(Actor actor)
+    public void RespawnActorsOnHalfPositions()
     {
-        return _actorAnomalyManager != null && _actorAnomalyManager.WasBlackoutEventActor(actor);
-    }
-
-    public int GetActorCount()
-    {
-        return _actorAnomalyManager != null ? _actorAnomalyManager.GetActorCount() : 0;
+        ActorManager actorManager = Object.FindAnyObjectByType<ActorManager>();
+        actorManager?.RespawnActorsOnHalfPositions();
     }
 }
