@@ -17,10 +17,11 @@ public class LightManager : MonoBehaviour
     [SerializeField] LightmapData[] _dayLightmaps;
     [SerializeField] LightmapData[] _nightLightmaps;
 
-    [SerializeField] private Light _directionalLight;
+    //[SerializeField] private Light _directionalLight;
     [SerializeField] private LightPreset _lightPreset;
     [SerializeField] private float _intensityMultiplier = 1f;
 
+    private float[] _defaultAreaBaseIntensities;
     private float _timer;
 
     public enum LightState
@@ -37,6 +38,24 @@ public class LightManager : MonoBehaviour
     {
         _dayLightmaps = BuildLightmaps(_dayLightmapColors, _dayLightmapDirs, _dayShadowMasks);
         _nightLightmaps = BuildLightmaps(_nightLightmapColors, _nightLightmapDirs, _nightShadowMasks);
+        CacheDefaultAreaBaseIntensities();
+    }
+
+    private void CacheDefaultAreaBaseIntensities()
+    {
+        if (_defaultAreaLigts == null)
+        {
+            _defaultAreaBaseIntensities = System.Array.Empty<float>();
+            return;
+        }
+
+        _defaultAreaBaseIntensities = new float[_defaultAreaLigts.Length];
+
+        for (int i = 0; i < _defaultAreaLigts.Length; i++)
+        {
+            Light light = _defaultAreaLigts[i];
+            _defaultAreaBaseIntensities[i] = light != null ? light.intensity : 0f;
+        }
     }
 
     void Update()
@@ -44,7 +63,7 @@ public class LightManager : MonoBehaviour
         switch (CurrentState)
         {
             case LightState.Idle:
-                ApplyAreaLightIntensity(0.15f);
+                ApplyAreaLightIntensity(1f);
                 break;
             case LightState.Start:
 
@@ -117,7 +136,7 @@ public class LightManager : MonoBehaviour
             _lightPreset.dirStartCurve.Evaluate(_timer);
 
         ApplyAreaLightIntensity(area);
-        ApplyDirectionalLight(dir);
+        //ApplyDirectionalLight(dir);
 
         if (_timer >= endTime)
         {
@@ -162,7 +181,7 @@ public class LightManager : MonoBehaviour
             _lightPreset.dirEndCurve.Evaluate(_timer);
 
         ApplyAreaLightIntensity(area);
-        ApplyDirectionalLight(dir);
+        //ApplyDirectionalLight(dir);
 
         if (_timer >= endTime)
         {
@@ -190,17 +209,26 @@ public class LightManager : MonoBehaviour
 
     void ApplyAreaLightIntensity(float value)
     {
-        foreach (var light in _defaultAreaLigts)
+        if (_defaultAreaLigts == null || _defaultAreaBaseIntensities == null)
+            return;
+
+        float scale = Mathf.Max(0f, value) * Mathf.Max(0f, _intensityMultiplier);
+
+        for (int i = 0; i < _defaultAreaLigts.Length; i++)
         {
-            light.intensity =
-                value * _intensityMultiplier;
+            Light light = _defaultAreaLigts[i];
+            if (light == null)
+                continue;
+
+            float baseIntensity = i < _defaultAreaBaseIntensities.Length ? _defaultAreaBaseIntensities[i] : light.intensity;
+            light.intensity = baseIntensity * scale;
         }
     }
 
-    void ApplyDirectionalLight(float value)
-    {
-        _directionalLight.intensity = value;
-    }
+    //void ApplyDirectionalLight(float value)
+    //{
+    //    _directionalLight.intensity = value;
+    //}
 
     private void ApplyDayLightmap()
     {
