@@ -37,19 +37,19 @@ public class Actor : AnomalyBehaviour
 
     private void Update()
     {
-        if (_isRotating)
-        {
-            _rotateTime += Time.deltaTime;
+        //if (_isRotating)
+        //{
+        //    _rotateTime += Time.deltaTime;
 
-            if (_rotateTime > 10f)
-            {
-                _isRotating = false;
-                if (_head != null)
-                    _head.transform.localRotation = Quaternion.identity;
+        //    if (_rotateTime > 10f)
+        //    {
+        //        _isRotating = false;
+        //        if (_head != null)
+        //            _head.transform.localRotation = Quaternion.identity;
 
-                _rotateTime = 0f;
-            }
-        }
+        //        _rotateTime = 0f;
+        //    }
+        //}
 
         if (_isJumpSquare)
         {

@@ -206,7 +206,7 @@ public class GameLogicManager : MonoBehaviour
         if (_vignetteVolume != null)
             _vignetteVolume.gameObject.SetActive(true);
 
-        SetVignetteWeight(_blackoutVignetteWeight);
+        SetVignetteWeight(GetStageScaledBlackoutVignetteWeight());
 
         _headBob?.StartBob();
         _lightManager?.StartLights();
@@ -220,6 +220,15 @@ public class GameLogicManager : MonoBehaviour
 
         _hasAnomalyThisStage = RollAnomalyForCurrentStage();
         _uiManager?.SetResultUIActive(false);
+    }
+
+    private float GetStageScaledBlackoutVignetteWeight()
+    {
+        int totalStages = GetTotalStageCount();
+        float step = 1f / Mathf.Max(1, totalStages);
+        float stageWeight = step * (_currentStageIndex + 1);
+
+        return Mathf.Clamp01(stageWeight * _blackoutVignetteWeight);
     }
 
     private void UpdateBlackout()
