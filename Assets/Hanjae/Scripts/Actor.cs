@@ -1,115 +1,139 @@
 using UnityEngine;
 
-public class Actor : MonoBehaviour
+public class Actor : AnomalyBehaviour
 {
-    private ActorManager _actorManager;
+    private enum ActorAnomalyType
+    {
+        Random,
+        NeckRotate,
+        JumpSquare
+    }
+
     [SerializeField] private GameObject _head;
+    [SerializeField] private Transform _jumpSquarePos;
+    [SerializeField] private ActorAnomalyType _anomalyType = ActorAnomalyType.Random;
 
-    float rottime;
-    float jumpTime;
+    [SerializeField] private float _shakeAmount = 0.03f;
+    [SerializeField] private float _shakeSpeed = 80f;
 
-    bool isRotate;
-    bool isJumpSquere;
+    private float _rotateTime;
+    private float _jumpTime;
 
-    Vector3 oriPos;
-    Quaternion oriRot;
+    private bool _isRotating;
+    private bool _isJumpSquare;
 
-    Vector3 jumpLocalPos;
+    private Vector3 _originPosition;
+    private Quaternion _originRotation;
+    private Transform _originParent;
 
-    [SerializeField] private float shakeAmount = 0.03f;
-    [SerializeField] private float shakeSpeed = 80f;
+    private Vector3 _jumpLocalPos;
 
-    void Start()
+    private void Start()
     {
-        _actorManager = GetComponentInParent<ActorManager>();
-
-        oriPos = gameObject.transform.position;
-        oriRot = gameObject.transform.rotation;
+        _originParent = transform.parent;
+        _originPosition = transform.position;
+        _originRotation = transform.rotation;
     }
 
-    void Update()
+    private void Update()
     {
-        if (isRotate)
+        if (_isRotating)
         {
-            rottime += Time.deltaTime;
+            _rotateTime += Time.deltaTime;
 
-            if (rottime > 10f)
+            if (_rotateTime > 10f)
             {
-                isRotate = false;
+                _isRotating = false;
+                if (_head != null)
+                    _head.transform.localRotation = Quaternion.identity;
 
-                _head.transform.localRotation =
-                    Quaternion.identity;
-
-                rottime = 0;
+                _rotateTime = 0f;
             }
         }
 
-        if (isJumpSquere)
+        if (_isJumpSquare)
         {
-            jumpTime += Time.deltaTime;
+            _jumpTime += Time.deltaTime;
 
-            float x =
-                Mathf.Sin(Time.time * shakeSpeed)
-                * shakeAmount;
+            float x = Mathf.Sin(Time.time * _shakeSpeed) * _shakeAmount;
+            float y = Mathf.Cos(Time.time * _shakeSpeed * 1.3f) * _shakeAmount;
 
-            float y =
-                Mathf.Cos(Time.time * shakeSpeed * 1.3f)
-                * shakeAmount;
+            transform.localPosition = _jumpLocalPos + new Vector3(x, y, 0f);
 
-            transform.localPosition =
-                jumpLocalPos +
-                new Vector3(x, y, 0);
-
-            if (jumpTime > 0.7f)
-            {
-                isJumpSquere = false;
-
-                transform.parent =
-                    _actorManager.gameObject.transform;
-
-                gameObject.transform.position = oriPos;
-                gameObject.transform.rotation = oriRot;
-
-                jumpTime = 0;
-            }
+            if (_jumpTime > 0.7f)
+                ResetJumpState();
         }
     }
 
-    public void SetMaterials(Material headMat, Material bodyMat)
+    public override void Activate()
     {
-        Transform capsule = transform.Find("Capsule");
+        ActorAnomalyType typeToRun = ResolveAnomalyType();
 
-        Renderer headRenderer =
-            capsule.Find("Head").GetComponent<Renderer>();
-
-        Renderer bodyRenderer =
-            capsule.GetComponent<Renderer>();
-
-        headRenderer.material = headMat;
-        bodyRenderer.material = bodyMat;
+        if (typeToRun == ActorAnomalyType.NeckRotate)
+            ActivateNeckRotate();
+        else
+            ActivateJumpSquare();
     }
 
-    public void NeckRotateToPlayer()
+    public override void Deactivate()
     {
-        _head.transform.LookAt(
-            Camera.main.transform.position
-        );
+        _isRotating = false;
+        _rotateTime = 0f;
 
-        isRotate = true;
+        if (_head != null)
+            _head.transform.localRotation = Quaternion.identity;
+
+        if (_isJumpSquare)
+            ResetJumpState();
     }
 
-    internal void JumpSquare(Transform pos)
+    private ActorAnomalyType ResolveAnomalyType()
     {
-        gameObject.transform.parent = pos;
+        if (_anomalyType != ActorAnomalyType.Random)
+            return _anomalyType;
 
-        jumpLocalPos = Vector3.zero;
+        string id = AnomalyID != null ? AnomalyID.ToLowerInvariant() : string.Empty;
 
-        gameObject.transform.localPosition =
-            jumpLocalPos;
+        if (id.Contains("neck"))
+            return ActorAnomalyType.NeckRotate;
 
-        gameObject.transform.localRotation =
-            Quaternion.identity;
+        if (id.Contains("jump"))
+            return ActorAnomalyType.JumpSquare;
 
-        isJumpSquere = true;
+        return Random.value < 0.5f ? ActorAnomalyType.NeckRotate : ActorAnomalyType.JumpSquare;
+    }
+
+    private void ActivateNeckRotate()
+    {
+        if (_head == null || Camera.main == null)
+            return;
+
+        _head.transform.LookAt(Camera.main.transform.position);
+        _isRotating = true;
+    }
+
+    private void ActivateJumpSquare()
+    {
+        if (_jumpSquarePos == null)
+            return;
+
+        transform.parent = _jumpSquarePos;
+        _jumpLocalPos = Vector3.zero;
+        transform.localPosition = _jumpLocalPos;
+        transform.localRotation = Quaternion.identity;
+
+        _isJumpSquare = true;
+        _jumpTime = 0f;
+    }
+
+    private void ResetJumpState()
+    {
+        _isJumpSquare = false;
+
+        transform.parent = _originParent;
+        transform.position = _originPosition;
+        transform.rotation = _originRotation;
+
+        _jumpTime = 0f;
     }
 }

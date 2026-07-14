@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Rendering;
@@ -20,12 +20,16 @@ public class GameLogicManager : MonoBehaviour
     [SerializeField] private float _resolveStartDelay = 3f;
     [SerializeField] private StageConfig[] _stages;
     [SerializeField] private int _currentStageIndex;
+    [SerializeField] private float _vignetteBlendDuration = 0.3f;
+
+    private Coroutine _vignetteBlendCoroutine;
 
     private SoundManager _soundManager;
     private AnomalyManager _anomalyManager;
     private LightManager _lightManager;
     private UIManager _uiManager;
     private DirectionCameraManager _directionCameraManager;
+    private ActorManager _actorManager;
 
     private float _stateElapsedTime;
     private float _resolveElapsedTime;
@@ -52,6 +56,7 @@ public class GameLogicManager : MonoBehaviour
         _anomalyManager = Object.FindAnyObjectByType<AnomalyManager>();
         _uiManager = Object.FindAnyObjectByType<UIManager>();
         _directionCameraManager = Object.FindAnyObjectByType<DirectionCameraManager>();
+        _actorManager = Object.FindAnyObjectByType<ActorManager>();
 
         if (_vignetteVolume != null)
             _vignetteVolume.gameObject.SetActive(false);
@@ -80,13 +85,13 @@ public class GameLogicManager : MonoBehaviour
         if (_isInputLocked)
             return;
 
-        if (Keyboard.current.digit1Key.wasPressedThisFrame)
+        if (Keyboard.current.digit5Key.wasPressedThisFrame)
             ChangeState(GameState.Blackout);
 
-        if (Keyboard.current.digit2Key.wasPressedThisFrame)
+        if (Keyboard.current.digit6Key.wasPressedThisFrame)
             ChangeState(GameState.Normal);
 
-        if (Keyboard.current.digit3Key.wasPressedThisFrame)
+        if (Keyboard.current.digit7Key.wasPressedThisFrame)
             _anomalyManager?.TriggerRandomAnomaly();
 
         if (CurrentState != GameState.Blackout || !_isResolvePhaseActive)
@@ -96,7 +101,7 @@ public class GameLogicManager : MonoBehaviour
             return;
 
         // 우클릭: "이상현상 없음" 선택
-        if (Mouse.current != null && Mouse.current.rightButton.wasPressedThisFrame)
+        if (Mouse.current != null && (Keyboard.current.digit2Key.wasPressedThisFrame))
         {
             if (_hasAnomalyThisStage)
                 HandleStageFailure();
@@ -107,7 +112,7 @@ public class GameLogicManager : MonoBehaviour
         }
 
         // 좌클릭: "이상현상 있음" 선택
-        if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
+        if (Mouse.current != null && (Keyboard.current.digit1Key.wasPressedThisFrame))
         {
             if (_hasAnomalyThisStage)
                 HandleStageSuccess();
@@ -132,9 +137,11 @@ public class GameLogicManager : MonoBehaviour
         switch (state)
         {
             case GameState.Normal:
+                Debug.Log("Normal 상태 시작");
                 EnterNormal();
                 break;
             case GameState.Blackout:
+                Debug.Log("Blackout 상태 시작");
                 EnterBlackout();
                 break;
         }
@@ -175,13 +182,16 @@ public class GameLogicManager : MonoBehaviour
         _soundManager?.NormalAmbient();
 
         _uiManager?.SetResultUIActive(false);
-        _anomalyManager?.RespawnActorsOnHalfPositions();
+
+        _anomalyManager?.InitializeAnomalyStates();
 
         _resolveElapsedTime = 0f;
         _isResolveFinished = false;
         _isStageTransitionHandled = false;
         _isResolvePhaseActive = false;
         _hasAnomalyThisStage = false;
+
+        _actorManager?.ActivateRandomHalfActors();
     }
 
     private void UpdateNormal()
@@ -202,8 +212,6 @@ public class GameLogicManager : MonoBehaviour
         _lightManager?.StartLights();
         _soundManager?.PlayAnnouncement();
         _soundManager?.DistortionAmbient();
-
-        _anomalyManager?.ClearStage();
 
         _resolveElapsedTime = 0f;
         _isResolveFinished = false;
@@ -231,6 +239,8 @@ public class GameLogicManager : MonoBehaviour
 
             if (_hasAnomalyThisStage)
                 TriggerAnomaly();
+            else
+                Debug.Log("[Anomaly] none");
         }
 
         if (_isResolveFinished)
@@ -283,8 +293,12 @@ public class GameLogicManager : MonoBehaviour
             return;
         }
 
-        _uiManager?.StartFade("GO TO NEXT STATION...", MoveToNextStage);
-        Debug.Log("다음 스테이지로 이동");
+        int nextStageDisplay = GetNextStageDisplayNumber();
+        int totalStages = GetTotalStageCount();
+        string nextStationMessage = $"GO TO NEXT STATION... ({nextStageDisplay}/{totalStages})";
+
+        _uiManager?.StartFade(nextStationMessage, MoveToNextStage);
+        Debug.Log("다음 스테이지로 이동: " + nextStageDisplay + "/" + totalStages);
     }
 
     private void MoveToNextStage()
@@ -349,6 +363,46 @@ public class GameLogicManager : MonoBehaviour
         if (_vignetteVolume == null)
             return;
 
-        _vignetteVolume.weight = Mathf.Clamp01(weight);
+        float targetWeight = Mathf.Clamp01(weight);
+
+        if (_vignetteBlendCoroutine != null)
+            StopCoroutine(_vignetteBlendCoroutine);
+
+        if (!_vignetteVolume.gameObject.activeSelf)
+            _vignetteVolume.gameObject.SetActive(true);
+
+        _vignetteBlendCoroutine = StartCoroutine(BlendVignetteWeightRoutine(targetWeight));
+    }
+
+    private IEnumerator BlendVignetteWeightRoutine(float targetWeight)
+    {
+        float startWeight = _vignetteVolume.weight;
+        float duration = Mathf.Max(0.01f, _vignetteBlendDuration);
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / duration);
+            _vignetteVolume.weight = Mathf.Lerp(startWeight, targetWeight, t);
+            yield return null;
+        }
+
+        _vignetteVolume.weight = targetWeight;
+
+        if (targetWeight <= 0f)
+            _vignetteVolume.gameObject.SetActive(false);
+
+        _vignetteBlendCoroutine = null;
+    }
+
+    private int GetTotalStageCount()
+    {
+        return _stages != null && _stages.Length > 0 ? _stages.Length : 1;
+    }
+
+    private int GetNextStageDisplayNumber()
+    {
+        return Mathf.Clamp(_currentStageIndex + 2, 1, GetTotalStageCount());
     }
 }
