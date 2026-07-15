@@ -1797,7 +1797,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 27b48c31a33cb6d4dbbc8d147f56b61c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PosterAnomaly
-  _activateWhenOutOfFrustum: 1
+  _activateWhenOutOfFrustum: 0
   _initialActiveChance: 0.5
   _selectionWeight: 1
   _posters:
@@ -7318,7 +7318,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e626f64957007a94abc8f55928176c3e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DoorAnomaly
-  _activateWhenOutOfFrustum: 1
+  _activateWhenOutOfFrustum: 0
   _initialActiveChance: 0.7
   _selectionWeight: 1
   _doors:
@@ -9231,7 +9231,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e626f64957007a94abc8f55928176c3e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DoorAnomaly
-  _activateWhenOutOfFrustum: 1
+  _activateWhenOutOfFrustum: 0
   _initialActiveChance: 0.7
   _selectionWeight: 1
   _doors:
@@ -10329,6 +10329,21 @@ MonoBehaviour:
   m_BeforeTransparentBundles: []
   m_BeforeStackBundles: []
   m_AfterStackBundles: []
+--- !u!114 &1424446397
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1407585253}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2aa79224135c59b4793d898365f9a08b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: '::'
+  _targetWidth: 9
+  _targetHeight: 16
+  _barColor: {r: 0, g: 0, b: 0, a: 1}
 --- !u!1 &1429890755
 GameObject:
   m_ObjectHideFlags: 0
@@ -12313,7 +12328,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 27b48c31a33cb6d4dbbc8d147f56b61c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PosterAnomaly
-  _activateWhenOutOfFrustum: 1
+  _activateWhenOutOfFrustum: 0
   _initialActiveChance: 0.5
   _selectionWeight: 1
   _posters:
@@ -15549,7 +15564,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 27b48c31a33cb6d4dbbc8d147f56b61c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PosterAnomaly
-  _activateWhenOutOfFrustum: 1
+  _activateWhenOutOfFrustum: 0
   _initialActiveChance: 0.5
   _selectionWeight: 1
   _posters:
@@ -15947,6 +15962,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 9005220659476430823, guid: 2d3a85ecde41a8246a79669975912b74, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1424446392}
+    - targetCorrespondingSourceObject: {fileID: 9005220659476430823, guid: 2d3a85ecde41a8246a79669975912b74, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1424446397}
   m_SourcePrefab: {fileID: 100100000, guid: 2d3a85ecde41a8246a79669975912b74, type: 3}
 --- !u!1001 &2296574425658519207
 PrefabInstance:
